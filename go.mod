@@ -1,3 +1,3 @@
-module compilador-2021-2
+module mgolgol
 
 go 1.17
