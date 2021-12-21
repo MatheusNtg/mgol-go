@@ -25,6 +25,7 @@ const (
 	INTEGER DataType = iota
 	REAL
 	LITERAL
+	NULL
 )
 
 type Token struct {
