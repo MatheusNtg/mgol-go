@@ -1,3 +1,3 @@
-module mgolgo
+module mgol-go
 
 go 1.17

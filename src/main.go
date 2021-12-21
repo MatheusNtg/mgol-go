@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"mgolgol/src/lexer"
+	"mgol-go/src/lexer"
 	"os"
 )
 
