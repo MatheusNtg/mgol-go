@@ -1,11 +1,11 @@
 # Compilador-2021-2
 
-## Integrantes:
+## Integrantes
 
- - Alef Iury Siqueira Ferreira
- - Matheus da Silva Rodrigues
+- Alef Iury Siqueira Ferreira
+- Matheus da Silva Rodrigues
 
-## TODO:
+## TODO
 
 - [ ] Implement scanner
 - [ ] Check why the readme is a binary file
