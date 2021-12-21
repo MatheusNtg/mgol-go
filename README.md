@@ -1,6 +1,8 @@
-# Compilador-2021-2
+# mgol-go
 
-## Integrantes
+This is a compiler for mgol implemented in go for the final work of the compilers course.
+
+## Members
 
 - Alef Iury Siqueira Ferreira
 - Matheus da Silva Rodrigues
