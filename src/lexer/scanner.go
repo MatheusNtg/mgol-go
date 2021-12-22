@@ -6,9 +6,10 @@ import (
 	"os"
 )
 
-func Scanner(file *os.File) *Token {
+// Scans a code file
+func Scanner(file *os.File) Token {
 	buffer := make([]byte, 1)
-	nBytes, err := file.Read(buffer)
+	_, err := file.Read(buffer)
 
 	if err != nil && err != io.EOF {
 		log.Fatal(err)
@@ -16,6 +17,8 @@ func Scanner(file *os.File) *Token {
 
 	if err == io.EOF {
 		EofToken := NewToken(EOF, "", NULL)
-		return EofToken
+		return *EofToken
 	}
+
+	return Token{}
 }
