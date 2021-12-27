@@ -14,4 +14,9 @@ This is a compiler for mgol implemented in go for the final work of the compiler
 ## TODO
 
 - [ ] Implement scanner
+- [ ] Implement pattern recognition
+- [ ] Implement scanner tests
 - [x] Check why the readme is a binary file
+- [] Implement symbol table
+- [] Implement symbol table tests
+
