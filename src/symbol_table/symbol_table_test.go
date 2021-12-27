@@ -20,9 +20,9 @@ func TestInsert(t *testing.T) {
 			expectedError: nil,
 			keys:          []string{"k1", "k2", "k3"},
 			values: []lexer.Token{
-				*lexer.NewToken(lexer.COMMENT, "comment", lexer.NULL),
-				*lexer.NewToken(lexer.IDENTIFIER, "identi", lexer.NULL),
-				*lexer.NewToken(lexer.LITERAL_CONST, `"an test"`, lexer.LITERAL),
+				lexer.NewToken(lexer.COMMENT, "comment", lexer.NULL),
+				lexer.NewToken(lexer.IDENTIFIER, "identi", lexer.NULL),
+				lexer.NewToken(lexer.LITERAL_CONST, `"an test"`, lexer.LITERAL),
 			},
 		},
 		{
@@ -30,9 +30,9 @@ func TestInsert(t *testing.T) {
 			expectedError: ErrorAlreadyOnTable,
 			keys:          []string{"k1", "k1", "k3"},
 			values: []lexer.Token{
-				*lexer.NewToken(lexer.COMMENT, "comment", lexer.NULL),
-				*lexer.NewToken(lexer.IDENTIFIER, "identi", lexer.NULL),
-				*lexer.NewToken(lexer.LITERAL_CONST, `"an test"`, lexer.LITERAL),
+				lexer.NewToken(lexer.COMMENT, "comment", lexer.NULL),
+				lexer.NewToken(lexer.IDENTIFIER, "identi", lexer.NULL),
+				lexer.NewToken(lexer.LITERAL_CONST, `"an test"`, lexer.LITERAL),
 			},
 			errorIndex: 1,
 		},
@@ -66,20 +66,20 @@ func TestGetToken(t *testing.T) {
 			name:          "Get existing token",
 			expectedError: nil,
 			prepareFunction: func() {
-				Insert("k1", *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL))
-				Insert("k2", *lexer.NewToken(lexer.CLOSE_PAR, ")", lexer.NULL))
-				Insert("k3", *lexer.NewToken(lexer.OPEN_PAR, "(", lexer.NULL))
+				Insert("k1", lexer.ATTR_TOKEN)
+				Insert("k2", lexer.CLOSE_PAR_TOKEN)
+				Insert("k3", lexer.OPEN_PAR_TOKEN)
 			},
 			key:           "k2",
-			expectedToken: *lexer.NewToken(lexer.CLOSE_PAR, ")", lexer.NULL),
+			expectedToken: lexer.CLOSE_PAR_TOKEN,
 		},
 		{
 			name:          "Get non-existing token",
 			expectedError: ErrorSymbolNotFound,
 			prepareFunction: func() {
-				Insert("k1", *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL))
-				Insert("k2", *lexer.NewToken(lexer.CLOSE_PAR, ")", lexer.NULL))
-				Insert("k3", *lexer.NewToken(lexer.OPEN_PAR, "(", lexer.NULL))
+				Insert("k1", lexer.ATTR_TOKEN)
+				Insert("k2", lexer.CLOSE_PAR_TOKEN)
+				Insert("k3", lexer.OPEN_PAR_TOKEN)
 			},
 			key:           "k7",
 			expectedToken: lexer.Token{},
@@ -88,20 +88,20 @@ func TestGetToken(t *testing.T) {
 			name:          "Get existing token on confliting table",
 			expectedError: nil,
 			prepareFunction: func() {
-				Insert("k1", *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL))
-				Insert("k1", *lexer.NewToken(lexer.CLOSE_PAR, ")", lexer.NULL))
-				Insert("k3", *lexer.NewToken(lexer.OPEN_PAR, "(", lexer.NULL))
+				Insert("k1", lexer.ATTR_TOKEN)
+				Insert("k1", lexer.CLOSE_PAR_TOKEN)
+				Insert("k3", lexer.OPEN_PAR_TOKEN)
 			},
 			key:           "k1",
-			expectedToken: *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL),
+			expectedToken: lexer.ATTR_TOKEN,
 		},
 		{
 			name:          "Get non-existing token on confliting table",
 			expectedError: ErrorSymbolNotFound,
 			prepareFunction: func() {
-				Insert("k1", *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL))
-				Insert("k1", *lexer.NewToken(lexer.CLOSE_PAR, ")", lexer.NULL))
-				Insert("k3", *lexer.NewToken(lexer.OPEN_PAR, "(", lexer.NULL))
+				Insert("k1", lexer.ATTR_TOKEN)
+				Insert("k1", lexer.CLOSE_PAR_TOKEN)
+				Insert("k3", lexer.OPEN_PAR_TOKEN)
 			},
 			key:           "k7",
 			expectedToken: lexer.Token{},
@@ -136,21 +136,21 @@ func TestUpdate(t *testing.T) {
 			name:          "Successfully update",
 			expectedError: nil,
 			prepareFunction: func() {
-				Insert("k1", *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL))
-				Insert("k2", *lexer.NewToken(lexer.CLOSE_PAR, ")", lexer.NULL))
-				Insert("k3", *lexer.NewToken(lexer.OPEN_PAR, "(", lexer.NULL))
+				Insert("k1", lexer.ATTR_TOKEN)
+				Insert("k2", lexer.CLOSE_PAR_TOKEN)
+				Insert("k3", lexer.OPEN_PAR_TOKEN)
 			},
 			key:           "k2",
-			newToken:      *lexer.NewToken(lexer.EOF, "", lexer.NULL),
-			expectedToken: *lexer.NewToken(lexer.EOF, "", lexer.NULL),
+			newToken:      lexer.EOF_TOKEN,
+			expectedToken: lexer.EOF_TOKEN,
 		},
 		{
 			name:          "Update an non-existing token",
 			expectedError: ErrorSymbolNotFound,
 			prepareFunction: func() {
-				Insert("k1", *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL))
-				Insert("k2", *lexer.NewToken(lexer.CLOSE_PAR, ")", lexer.NULL))
-				Insert("k3", *lexer.NewToken(lexer.OPEN_PAR, "(", lexer.NULL))
+				Insert("k1", lexer.ATTR_TOKEN)
+				Insert("k2", lexer.CLOSE_PAR_TOKEN)
+				Insert("k3", lexer.OPEN_PAR_TOKEN)
 			},
 			key:           "k4",
 			newToken:      lexer.Token{},
@@ -160,23 +160,23 @@ func TestUpdate(t *testing.T) {
 			name:          "Successfully update on conflict tables",
 			expectedError: nil,
 			prepareFunction: func() {
-				Insert("k1", *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL))
-				Insert("k1", *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL))
-				Insert("k2", *lexer.NewToken(lexer.CLOSE_PAR, ")", lexer.NULL))
-				Insert("k3", *lexer.NewToken(lexer.OPEN_PAR, "(", lexer.NULL))
+				Insert("k1", lexer.ATTR_TOKEN)
+				Insert("k1", lexer.ATTR_TOKEN)
+				Insert("k2", lexer.CLOSE_PAR_TOKEN)
+				Insert("k3", lexer.OPEN_PAR_TOKEN)
 			},
 			key:           "k2",
-			newToken:      *lexer.NewToken(lexer.EOF, "", lexer.NULL),
-			expectedToken: *lexer.NewToken(lexer.EOF, "", lexer.NULL),
+			newToken:      lexer.EOF_TOKEN,
+			expectedToken: lexer.EOF_TOKEN,
 		},
 		{
 			name:          "Update an non-existing token on conflict tables",
 			expectedError: ErrorSymbolNotFound,
 			prepareFunction: func() {
-				Insert("k1", *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL))
-				Insert("k1", *lexer.NewToken(lexer.ATTR, "<-", lexer.NULL))
-				Insert("k2", *lexer.NewToken(lexer.CLOSE_PAR, ")", lexer.NULL))
-				Insert("k3", *lexer.NewToken(lexer.OPEN_PAR, "(", lexer.NULL))
+				Insert("k1", lexer.ATTR_TOKEN)
+				Insert("k1", lexer.ATTR_TOKEN)
+				Insert("k2", lexer.CLOSE_PAR_TOKEN)
+				Insert("k3", lexer.OPEN_PAR_TOKEN)
 			},
 			key:           "k4",
 			newToken:      lexer.Token{},

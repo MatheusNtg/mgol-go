@@ -18,7 +18,7 @@ func main() {
 	// Temporary implementation, before the pattern recognizer
 	for {
 		currToken := lexer.Scanner(file)
-		if currToken == *lexer.NewToken(lexer.EOF, "", lexer.NULL) {
+		if currToken == lexer.EOF_TOKEN {
 			break
 		}
 	}

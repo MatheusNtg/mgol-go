@@ -16,8 +16,7 @@ func Scanner(file *os.File) Token {
 	}
 
 	if err == io.EOF {
-		EofToken := NewToken(EOF, "", NULL)
-		return *EofToken
+		return EOF_TOKEN
 	}
 
 	return Token{}
