@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"mgol-go/src/lexer"
 	"os"
@@ -18,8 +19,11 @@ func main() {
 	// Temporary implementation, before the pattern recognizer
 	for {
 		currToken := lexer.Scanner(file)
+		fmt.Println(currToken)
+
 		if currToken == lexer.EOF_TOKEN {
 			break
 		}
 	}
+
 }
