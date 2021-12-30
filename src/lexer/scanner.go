@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -114,8 +114,16 @@ func (s *Scanner) Scan() Token {
 			dataType := s.getDataType(string(lexem))
 
 			s.clearLexemBuffer()
+			s.dft.Reset()
 
 			return NewToken(tokenClass, string(lexem), dataType)
+		}
+
+		if !containsByte(alphabet, currSymbol) {
+			log.Printf("Error on line %d column %d, word %s doesn't exists on the language\n", s.currentLineFile, s.currentColumnFile, fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
+			s.clearLexemBuffer()
+			s.dft.Reset()
+			return ERROR_TOKEN
 		}
 
 		if currChar == '\n' {
@@ -125,22 +133,23 @@ func (s *Scanner) Scan() Token {
 
 		if containsByte(s.charsToIgnore, currChar) {
 			s.dft.Next(currSymbol)
+			if s.dft.IsFinalState() {
+				tokenClass := s.getTokenClass(s.dft.GetCurrentState())
+				lexem := s.lexemBuffer
+				dataType := s.getDataType(string(lexem))
+
+				s.clearLexemBuffer()
+				s.dft.Reset()
+				s.file.Seek(-1, os.SEEK_CUR)
+
+				return NewToken(tokenClass, string(lexem), dataType)
+			}
 			continue
 		}
 
-		_, err = s.dft.Next(currSymbol)
-		//TODO: Tratar o erro aqui
-		if errors.Is(err, ErrorTransitionDoesNotExist) && s.dft.IsFinalState() {
-			tokenClass := s.getTokenClass(s.dft.GetCurrentState())
-			lexem := s.lexemBuffer
-			dataType := s.getDataType(string(lexem))
-
-			s.clearLexemBuffer()
-			s.file.Seek(-1, os.SEEK_CUR)
-
-			return NewToken(tokenClass, string(lexem), dataType)
+		s.dft.Next(currSymbol)
+		if !containsByte(s.charsToIgnore, currChar) {
+			s.lexemBuffer = append(s.lexemBuffer, currChar)
 		}
-
-		s.lexemBuffer = append(s.lexemBuffer, currChar)
 	}
 }
