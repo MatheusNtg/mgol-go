@@ -1,31 +1,33 @@
 package lexer
 
-type TokenClass int
+import "fmt"
+
+type TokenClass string
 
 // Available classes of tokens
 const (
-	NUM TokenClass = iota
-	LITERAL_CONST
-	IDENTIFIER
-	COMMENT
-	REL_OP
-	ARIT_OP
-	EOF
-	ATTR
-	OPEN_PAR
-	CLOSE_PAR
-	SEMICOLON
-	ERROR
+	NUM           TokenClass = "Num"
+	LITERAL_CONST TokenClass = "Lit"
+	IDENTIFIER    TokenClass = "id"
+	COMMENT       TokenClass = "Comentário"
+	REL_OP        TokenClass = "OPR"
+	ARIT_OP       TokenClass = "OPM"
+	EOF           TokenClass = "EOF"
+	ATTR          TokenClass = "RCB"
+	OPEN_PAR      TokenClass = "AB_P"
+	CLOSE_PAR     TokenClass = "FC_P"
+	SEMICOLON     TokenClass = "PT_V"
+	ERROR         TokenClass = "ERRO"
 )
 
-type DataType int
+type DataType string
 
 // Available types of data
 const (
-	INTEGER DataType = iota
-	REAL
-	LITERAL
-	NULL
+	INTEGER DataType = "inteiro"
+	REAL    DataType = "real"
+	LITERAL DataType = "literal"
+	NULL    DataType = "NULO"
 )
 
 type Token struct {
@@ -68,10 +70,36 @@ var (
 	}
 )
 
+//Language Reserved Tokens
+var LanguageReservedTokens = []Token{
+	NewToken("inicio", "inicio", "inicio"),
+	NewToken("varinicio", "varinicio", "varinicio"),
+	NewToken("varfim", "varfim", "varfim"),
+	NewToken("escreva", "escreva", "escreva"),
+	NewToken("leia", "leia", "leia"),
+	NewToken("se", "se", "se"),
+	NewToken("entao", "entao", "entao"),
+	NewToken("fimse", "fimse", "fimse"),
+	NewToken("repita", "repita", "repita"),
+	NewToken("fimrepita", "fimrepita", "fimrepita"),
+	NewToken("fim", "fim", "fim"),
+	NewToken("inteiro", "inteiro", "inteiro"),
+	NewToken("literal", "literal", "literal"),
+	NewToken("real", "real", "real"),
+}
+
 func NewToken(class TokenClass, lexeme string, dataType DataType) Token {
 	return Token{
 		class:    class,
 		lexeme:   lexeme,
 		dataType: dataType,
 	}
+}
+
+func (t Token) GetLexem() string {
+	return t.lexeme
+}
+
+func (t Token) String() string {
+	return fmt.Sprintf("Classe: %v, Lexema: %v, Tipo: %v", t.class, t.lexeme, t.dataType)
 }

@@ -1,7 +1,6 @@
-package symboltable
+package lexer
 
 import (
-	"mgol-go/src/lexer"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -12,27 +11,27 @@ func TestInsert(t *testing.T) {
 		name          string
 		expectedError error
 		keys          []string
-		values        []lexer.Token
+		values        []Token
 		errorIndex    int
 	}{
 		{
 			name:          "Insert without conflict",
 			expectedError: nil,
 			keys:          []string{"k1", "k2", "k3"},
-			values: []lexer.Token{
-				lexer.NewToken(lexer.COMMENT, "comment", lexer.NULL),
-				lexer.NewToken(lexer.IDENTIFIER, "identi", lexer.NULL),
-				lexer.NewToken(lexer.LITERAL_CONST, `"an test"`, lexer.LITERAL),
+			values: []Token{
+				NewToken(COMMENT, "comment", NULL),
+				NewToken(IDENTIFIER, "identi", NULL),
+				NewToken(LITERAL_CONST, `"an test"`, LITERAL),
 			},
 		},
 		{
 			name:          "Insert with conflict",
 			expectedError: ErrorAlreadyOnTable,
 			keys:          []string{"k1", "k1", "k3"},
-			values: []lexer.Token{
-				lexer.NewToken(lexer.COMMENT, "comment", lexer.NULL),
-				lexer.NewToken(lexer.IDENTIFIER, "identi", lexer.NULL),
-				lexer.NewToken(lexer.LITERAL_CONST, `"an test"`, lexer.LITERAL),
+			values: []Token{
+				NewToken(COMMENT, "comment", NULL),
+				NewToken(IDENTIFIER, "identi", NULL),
+				NewToken(LITERAL_CONST, `"an test"`, LITERAL),
 			},
 			errorIndex: 1,
 		},
@@ -41,7 +40,7 @@ func TestInsert(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for index, key := range tc.keys {
-				token, err := Insert(key, tc.values[index])
+				token, err := InsertSymbolTable(key, tc.values[index])
 				if tc.expectedError != nil && index == tc.errorIndex {
 					require.Error(t, err)
 					continue
@@ -49,7 +48,7 @@ func TestInsert(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.values[index], token)
 			}
-			CleanupTable()
+			CleanupSymbolTable()
 		})
 	}
 }
@@ -60,65 +59,65 @@ func TestGetToken(t *testing.T) {
 		expectedError   error
 		prepareFunction func()
 		key             string
-		expectedToken   lexer.Token
+		expectedToken   Token
 	}{
 		{
 			name:          "Get existing token",
 			expectedError: nil,
 			prepareFunction: func() {
-				Insert("k1", lexer.ATTR_TOKEN)
-				Insert("k2", lexer.CLOSE_PAR_TOKEN)
-				Insert("k3", lexer.OPEN_PAR_TOKEN)
+				InsertSymbolTable("k1", ATTR_TOKEN)
+				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
+				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k2",
-			expectedToken: lexer.CLOSE_PAR_TOKEN,
+			expectedToken: CLOSE_PAR_TOKEN,
 		},
 		{
 			name:          "Get non-existing token",
 			expectedError: ErrorSymbolNotFound,
 			prepareFunction: func() {
-				Insert("k1", lexer.ATTR_TOKEN)
-				Insert("k2", lexer.CLOSE_PAR_TOKEN)
-				Insert("k3", lexer.OPEN_PAR_TOKEN)
+				InsertSymbolTable("k1", ATTR_TOKEN)
+				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
+				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k7",
-			expectedToken: lexer.Token{},
+			expectedToken: Token{},
 		},
 		{
 			name:          "Get existing token on confliting table",
 			expectedError: nil,
 			prepareFunction: func() {
-				Insert("k1", lexer.ATTR_TOKEN)
-				Insert("k1", lexer.CLOSE_PAR_TOKEN)
-				Insert("k3", lexer.OPEN_PAR_TOKEN)
+				InsertSymbolTable("k1", ATTR_TOKEN)
+				InsertSymbolTable("k1", CLOSE_PAR_TOKEN)
+				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k1",
-			expectedToken: lexer.ATTR_TOKEN,
+			expectedToken: ATTR_TOKEN,
 		},
 		{
 			name:          "Get non-existing token on confliting table",
 			expectedError: ErrorSymbolNotFound,
 			prepareFunction: func() {
-				Insert("k1", lexer.ATTR_TOKEN)
-				Insert("k1", lexer.CLOSE_PAR_TOKEN)
-				Insert("k3", lexer.OPEN_PAR_TOKEN)
+				InsertSymbolTable("k1", ATTR_TOKEN)
+				InsertSymbolTable("k1", CLOSE_PAR_TOKEN)
+				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k7",
-			expectedToken: lexer.Token{},
+			expectedToken: Token{},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.prepareFunction()
-			token, err := GetToken(tc.key)
+			token, err := GetTokenFromSymbolTable(tc.key)
 			if tc.expectedError != nil {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 			}
 			require.Equal(t, tc.expectedToken, token)
-			CleanupTable()
+			CleanupSymbolTable()
 		})
 	}
 }
@@ -129,73 +128,73 @@ func TestUpdate(t *testing.T) {
 		expectedError   error
 		prepareFunction func()
 		key             string
-		newToken        lexer.Token
-		expectedToken   lexer.Token
+		newToken        Token
+		expectedToken   Token
 	}{
 		{
 			name:          "Successfully update",
 			expectedError: nil,
 			prepareFunction: func() {
-				Insert("k1", lexer.ATTR_TOKEN)
-				Insert("k2", lexer.CLOSE_PAR_TOKEN)
-				Insert("k3", lexer.OPEN_PAR_TOKEN)
+				InsertSymbolTable("k1", ATTR_TOKEN)
+				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
+				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k2",
-			newToken:      lexer.EOF_TOKEN,
-			expectedToken: lexer.EOF_TOKEN,
+			newToken:      EOF_TOKEN,
+			expectedToken: EOF_TOKEN,
 		},
 		{
 			name:          "Update an non-existing token",
 			expectedError: ErrorSymbolNotFound,
 			prepareFunction: func() {
-				Insert("k1", lexer.ATTR_TOKEN)
-				Insert("k2", lexer.CLOSE_PAR_TOKEN)
-				Insert("k3", lexer.OPEN_PAR_TOKEN)
+				InsertSymbolTable("k1", ATTR_TOKEN)
+				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
+				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k4",
-			newToken:      lexer.Token{},
-			expectedToken: lexer.Token{},
+			newToken:      Token{},
+			expectedToken: Token{},
 		},
 		{
 			name:          "Successfully update on conflict tables",
 			expectedError: nil,
 			prepareFunction: func() {
-				Insert("k1", lexer.ATTR_TOKEN)
-				Insert("k1", lexer.ATTR_TOKEN)
-				Insert("k2", lexer.CLOSE_PAR_TOKEN)
-				Insert("k3", lexer.OPEN_PAR_TOKEN)
+				InsertSymbolTable("k1", ATTR_TOKEN)
+				InsertSymbolTable("k1", ATTR_TOKEN)
+				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
+				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k2",
-			newToken:      lexer.EOF_TOKEN,
-			expectedToken: lexer.EOF_TOKEN,
+			newToken:      EOF_TOKEN,
+			expectedToken: EOF_TOKEN,
 		},
 		{
 			name:          "Update an non-existing token on conflict tables",
 			expectedError: ErrorSymbolNotFound,
 			prepareFunction: func() {
-				Insert("k1", lexer.ATTR_TOKEN)
-				Insert("k1", lexer.ATTR_TOKEN)
-				Insert("k2", lexer.CLOSE_PAR_TOKEN)
-				Insert("k3", lexer.OPEN_PAR_TOKEN)
+				InsertSymbolTable("k1", ATTR_TOKEN)
+				InsertSymbolTable("k1", ATTR_TOKEN)
+				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
+				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k4",
-			newToken:      lexer.Token{},
-			expectedToken: lexer.Token{},
+			newToken:      Token{},
+			expectedToken: Token{},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.prepareFunction()
-			err := Update(tc.key, tc.newToken)
+			err := UpdateSymbolTable(tc.key, tc.newToken)
 			if tc.expectedError != nil {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 			}
-			table := GetTable()
+			table := GetSymbolTable()
 			require.Equal(t, tc.expectedToken, table[tc.key])
-			CleanupTable()
+			CleanupSymbolTable()
 		})
 	}
 }

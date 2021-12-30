@@ -7,6 +7,12 @@ import (
 	"os"
 )
 
+func fillSymbolTable() {
+	for _, languageToken := range lexer.LanguageReservedTokens {
+		lexer.InsertSymbolTable(languageToken.GetLexem(), languageToken)
+	}
+}
+
 func main() {
 	filePath := os.Args[1]
 
@@ -16,14 +22,18 @@ func main() {
 	}
 	defer file.Close()
 
-	// Temporary implementation, before the pattern recognizer
-	for {
-		currToken := lexer.Scanner(file)
-		fmt.Println(currToken)
+	fillSymbolTable()
+	defer lexer.CleanupSymbolTable()
 
-		if currToken == lexer.EOF_TOKEN {
+	scanner := lexer.NewScanner(file)
+	for {
+		token := scanner.Scan()
+		fmt.Println(token)
+		if token == lexer.EOF_TOKEN {
 			break
 		}
 	}
 
+	// fmt.Println("Tabela de símbolos:")
+	// lexer.PrintSymbolTable()
 }

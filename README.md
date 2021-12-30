@@ -6,6 +6,8 @@
 
 This is a compiler for mgol implemented in go for the final work of the compilers course.
 
+**PS. This project must be run only on linux machines**
+
 ## Members
 
 - Alef Iury Siqueira Ferreira
@@ -13,10 +15,11 @@ This is a compiler for mgol implemented in go for the final work of the compiler
 
 ## TODO
 
-- [ ] Implement scanner
-- [ ] Implement pattern recognition
-- [ ] Implement scanner tests
+- [x] Implement scanner
+- [x] Implement pattern recognition
+- [x] Implement scanner tests
 - [x] Check why the readme is a binary file
-- [ ] Implement symbol table
-- [ ] Implement symbol table tests
-
+- [x] Implement symbol table
+- [x] Implement symbol table tests
+- [ ] Return elements from the symbol table
+- [ ] Fix the rows and columns bug
