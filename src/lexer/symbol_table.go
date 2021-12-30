@@ -1,8 +1,7 @@
-package symboltable
+package lexer
 
 import (
 	"fmt"
-	"mgol-go/src/lexer"
 )
 
 // Posible errors
@@ -11,12 +10,12 @@ var (
 	ErrorSymbolNotFound = fmt.Errorf("the specified symbol doesn't exists on the symbol table")
 )
 
-var table = map[string]lexer.Token{}
+var table = map[string]Token{}
 
-func Insert(id string, token lexer.Token) (lexer.Token, error) {
+func InsertSymbolTable(id string, token Token) (Token, error) {
 	_, found := table[id]
 	if found {
-		return lexer.Token{}, ErrorAlreadyOnTable
+		return Token{}, ErrorAlreadyOnTable
 	}
 
 	table[id] = token
@@ -24,15 +23,15 @@ func Insert(id string, token lexer.Token) (lexer.Token, error) {
 	return table[id], nil
 }
 
-func GetToken(id string) (lexer.Token, error) {
+func GetTokenFromSymbolTable(id string) (Token, error) {
 	token, found := table[id]
 	if !found {
-		return lexer.Token{}, ErrorSymbolNotFound
+		return Token{}, ErrorSymbolNotFound
 	}
 	return token, nil
 }
 
-func Update(id string, newToken lexer.Token) error {
+func UpdateSymbolTable(id string, newToken Token) error {
 	_, found := table[id]
 	if !found {
 		return ErrorSymbolNotFound
@@ -41,12 +40,18 @@ func Update(id string, newToken lexer.Token) error {
 	return nil
 }
 
-func CleanupTable() {
+func CleanupSymbolTable() {
 	for k := range table {
 		delete(table, k)
 	}
 }
 
-func GetTable() map[string]lexer.Token {
+func GetSymbolTable() map[string]Token {
 	return table
+}
+
+func PrintSymbolTable() {
+	for k, v := range table {
+		fmt.Printf("Chave: %v, Valor: %v\n", k, v)
+	}
 }

@@ -1,6 +1,7 @@
 package lexer
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -8,24 +9,157 @@ import (
 )
 
 var (
-	alphabet      = []byte{'\n', '\t', ' ', 'L', 'D', '_'}
-	states        = []int{0, 1}
-	finalStates   = []int{1}
+	alphabet = []byte{
+		'\n', '\t', ' ', 'L', 'D',
+		'_', '+', '-', '*', '/',
+		'>', '<', '=', '{', '}',
+		'(', ')', ';', '"', '.',
+		'E', 'e', ':', ',', '!',
+		'?', '[', ']', '\\',
+	}
+	states        = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22}
+	finalStates   = []int{1, 2, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 22}
 	transitionMap = map[int]map[byte]int{
 		0: {
 			'\n': 0,
 			'\t': 0,
 			' ':  0,
 			'L':  1, // L is the set that represents all the letters of the alphabet, low and capital case
+			'D':  2,
+			'<':  8,
+			'>':  10,
+			'=':  12, // Relational operator
+			'+':  14, // Arithmitec Operator
+			'-':  14,
+			'*':  14,
+			'/':  14,
+			'(':  15, // Open brackets
+			')':  16, // Closed brackets
+			';':  17, // Semi columns
+			'{':  19,
+			'"':  21,
 		},
+		// Identifier
 		1: {
 			'L': 1,
 			'D': 1, // D is the set that represents all numbers from 0 to 9
 			'_': 1,
 		},
+		// Numeric Constants
+		2: {
+			'D': 2,
+			'.': 3,
+			'E': 5,
+			'e': 5,
+		},
+		3: {
+			'D': 4,
+		},
+		4: {
+			'D': 4,
+			'E': 5,
+			'e': 5,
+		},
+		5: {
+			'+': 6,
+			'-': 6,
+			'D': 7,
+		},
+		6: {
+			'D': 7,
+		},
+		7: {
+			'D': 7,
+		},
+		// Relational operator
+		8: {
+			'>': 9,
+			'=': 9,
+			'-': 13, // Attribute
+		},
+		10: {
+			'=': 11,
+		},
+		19: {
+			'\t': 19,
+			'\n': 19,
+			' ':  19,
+			'L':  19,
+			'D':  19,
+			'_':  19,
+			'+':  19,
+			'-':  19,
+			'*':  19,
+			'/':  19,
+			'>':  19,
+			'<':  19,
+			'=':  19,
+			'{':  19,
+			'(':  19,
+			')':  19,
+			';':  19,
+			'"':  19,
+			'.':  19,
+			'E':  19,
+			'e':  19,
+			':':  19,
+			',':  19,
+			'!':  19,
+			'?':  19,
+			'[':  19,
+			']':  19,
+			'\\': 19,
+			'}':  20,
+		},
+		21: {
+			'\t': 21,
+			'\n': 21,
+			' ':  21,
+			'L':  21,
+			'D':  21,
+			'_':  21,
+			'+':  21,
+			'-':  21,
+			'*':  21,
+			'/':  21,
+			'>':  21,
+			'<':  21,
+			'=':  21,
+			'{':  21,
+			'(':  21,
+			')':  21,
+			';':  21,
+			'.':  21,
+			'E':  21,
+			'e':  21,
+			'}':  21,
+			':':  21,
+			',':  21,
+			'!':  21,
+			'?':  21,
+			'[':  21,
+			']':  21,
+			'\\': 21,
+			'"':  22,
+		},
 	}
 	stateToTokenClassMap = map[int]TokenClass{
-		1: IDENTIFIER,
+		1:  IDENTIFIER,
+		2:  NUM,
+		4:  NUM,
+		7:  NUM,
+		8:  REL_OP,
+		9:  REL_OP,
+		10: REL_OP,
+		11: REL_OP,
+		12: REL_OP,
+		13: ATTR,
+		14: ARIT_OP,
+		15: OPEN_PAR,
+		16: CLOSE_PAR,
+		17: SEMICOLON,
+		20: COMMENT,
+		22: LITERAL_CONST,
 	}
 )
 
@@ -91,8 +225,8 @@ func (s *Scanner) recognizeSymbol(symbol byte) byte {
 	return symbol
 }
 
-// Scan reads the Scanner file until finds an Token or an error.
-// If it finds an Token it returns the reconized token, otherwhise
+// Scan reads the Scanner file until finds a Token or an error.
+// If it finds a Token it returns the reconized token, otherwhise
 // just returns an error Token and shows to the user the error
 // message related
 func (s *Scanner) Scan() Token {
@@ -115,12 +249,14 @@ func (s *Scanner) Scan() Token {
 
 			s.clearLexemBuffer()
 			s.dft.Reset()
+			token := NewToken(tokenClass, string(lexem), dataType)
+			InsertSymbolTable(string(lexem), token)
 
-			return NewToken(tokenClass, string(lexem), dataType)
+			return token
 		}
 
 		if !containsByte(alphabet, currSymbol) {
-			log.Printf("Error on line %d column %d, word %s doesn't exists on the language\n", s.currentLineFile, s.currentColumnFile, fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
+			log.Printf("Erro na linha %d coluna %d, palavra %s não existe na linguagem\n", s.currentLineFile, s.currentColumnFile, fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
 			s.clearLexemBuffer()
 			s.dft.Reset()
 			return ERROR_TOKEN
@@ -142,13 +278,33 @@ func (s *Scanner) Scan() Token {
 				s.dft.Reset()
 				s.file.Seek(-1, os.SEEK_CUR)
 
-				return NewToken(tokenClass, string(lexem), dataType)
+				token := NewToken(tokenClass, string(lexem), dataType)
+				InsertSymbolTable(string(lexem), token)
+
+				return token
 			}
-			continue
 		}
 
-		s.dft.Next(currSymbol)
+		_, err = s.dft.Next(currSymbol)
+
+		if errors.Is(err, ErrorTransitionDoesNotExist) && s.dft.IsFinalState() {
+			tokenClass := s.getTokenClass(s.dft.GetCurrentState())
+			lexem := s.lexemBuffer
+			dataType := s.getDataType(string(lexem))
+
+			s.clearLexemBuffer()
+			s.dft.Reset()
+			s.file.Seek(-1, os.SEEK_CUR)
+
+			token := NewToken(tokenClass, string(lexem), dataType)
+			InsertSymbolTable(string(lexem), token)
+
+			return token
+		}
+
 		if !containsByte(s.charsToIgnore, currChar) {
+			s.lexemBuffer = append(s.lexemBuffer, currChar)
+		} else if containsByte(s.lexemBuffer, '"') {
 			s.lexemBuffer = append(s.lexemBuffer, currChar)
 		}
 	}
