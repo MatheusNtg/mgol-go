@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 )
 
 var (
@@ -203,9 +204,19 @@ func (s *Scanner) getTokenClass(state int) TokenClass {
 	return s.stateToTokenClassMap[state]
 }
 
-// TODO: Implement this method to recognize the datatypes
-func (s *Scanner) getDataType(lexem string) DataType {
-	return NULL
+func (s *Scanner) updateDataType(token *Token) {
+	switch token.class {
+	case NUM:
+		if strings.Contains(token.lexeme, ".") {
+			token.dataType = REAL
+		} else {
+			token.dataType = INTEGER
+		}
+	case LITERAL_CONST:
+		token.dataType = LITERAL
+	default:
+		token.dataType = NULL
+	}
 }
 
 func (s *Scanner) clearLexemBuffer() {
@@ -245,11 +256,11 @@ func (s *Scanner) Scan() Token {
 		if err == io.EOF && len(s.lexemBuffer) != 0 {
 			tokenClass := s.getTokenClass(s.dft.GetCurrentState())
 			lexem := s.lexemBuffer
-			dataType := s.getDataType(string(lexem))
+			token := NewToken(tokenClass, string(lexem), NULL)
+			s.updateDataType(&token)
 
 			s.clearLexemBuffer()
 			s.dft.Reset()
-			token := NewToken(tokenClass, string(lexem), dataType)
 			InsertSymbolTable(string(lexem), token)
 
 			return token
@@ -267,36 +278,18 @@ func (s *Scanner) Scan() Token {
 			s.currentColumnFile = 1
 		}
 
-		if containsByte(s.charsToIgnore, currChar) {
-			s.dft.Next(currSymbol)
-			if s.dft.IsFinalState() {
-				tokenClass := s.getTokenClass(s.dft.GetCurrentState())
-				lexem := s.lexemBuffer
-				dataType := s.getDataType(string(lexem))
-
-				s.clearLexemBuffer()
-				s.dft.Reset()
-				s.file.Seek(-1, os.SEEK_CUR)
-
-				token := NewToken(tokenClass, string(lexem), dataType)
-				InsertSymbolTable(string(lexem), token)
-
-				return token
-			}
-		}
-
 		_, err = s.dft.Next(currSymbol)
 
 		if errors.Is(err, ErrorTransitionDoesNotExist) && s.dft.IsFinalState() {
 			tokenClass := s.getTokenClass(s.dft.GetCurrentState())
 			lexem := s.lexemBuffer
-			dataType := s.getDataType(string(lexem))
+			token := NewToken(tokenClass, string(lexem), NULL)
+			s.updateDataType(&token)
 
 			s.clearLexemBuffer()
 			s.dft.Reset()
 			s.file.Seek(-1, os.SEEK_CUR)
 
-			token := NewToken(tokenClass, string(lexem), dataType)
 			InsertSymbolTable(string(lexem), token)
 
 			return token
