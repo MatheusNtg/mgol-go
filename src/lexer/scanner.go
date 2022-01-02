@@ -193,7 +193,7 @@ func NewScanner(file *os.File) *Scanner {
 		file:                 file,
 		lexemBuffer:          []byte{},
 		currentLineFile:      1,
-		currentColumnFile:    1,
+		currentColumnFile:    0,
 		dft:                  *dft,
 		stateToTokenClassMap: stateToTokenClassMap,
 		charsToIgnore:        []byte{'\n', ' ', '\t'},
@@ -223,6 +223,13 @@ func (s *Scanner) clearLexemBuffer() {
 	s.lexemBuffer = []byte{}
 }
 
+// Analyses a input symbol to check if it is in the Letter set,
+// Digit set, or neither.
+//
+// If the input symbol is in the Letter set, the letter 'L' is returned.
+// If the input symbol is in the Digit set, the letter 'D' is returned.
+// If the input symbol is not in the Letter set or Digit set,
+// then the symbol itself is returned.
 func (s *Scanner) recognizeSymbol(symbol byte) byte {
 	// Letter set
 	if (symbol >= 'a' && symbol <= 'z') || (symbol >= 'A' && symbol <= 'Z') {
@@ -249,11 +256,19 @@ func (s *Scanner) Scan() Token {
 		currSymbol := s.recognizeSymbol(currChar)
 
 		s.currentColumnFile += n
+
 		if err == io.EOF && len(s.lexemBuffer) == 0 {
 			return EOF_TOKEN
 		}
 
 		if err == io.EOF && len(s.lexemBuffer) != 0 {
+			if containsByte(s.lexemBuffer, '{') && !containsByte(s.lexemBuffer, '}') {
+				log.Printf("Erro na linha %d coluna %d, palavra %s não existe na linguagem\n", s.currentLineFile, s.currentColumnFile, fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
+				s.clearLexemBuffer()
+				s.dft.Reset()
+				return ERROR_TOKEN
+			}
+
 			tokenClass := s.getTokenClass(s.dft.GetCurrentState())
 			lexem := s.lexemBuffer
 			token := NewToken(tokenClass, string(lexem), NULL)
@@ -266,7 +281,7 @@ func (s *Scanner) Scan() Token {
 			return token
 		}
 
-		if !containsByte(alphabet, currSymbol) {
+		if !containsByte(alphabet, currSymbol) || !containsByte(s.lexemBuffer, '{') && currChar == '}' {
 			log.Printf("Erro na linha %d coluna %d, palavra %s não existe na linguagem\n", s.currentLineFile, s.currentColumnFile, fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
 			s.clearLexemBuffer()
 			s.dft.Reset()
@@ -275,7 +290,7 @@ func (s *Scanner) Scan() Token {
 
 		if currChar == '\n' {
 			s.currentLineFile += 1
-			s.currentColumnFile = 1
+			s.currentColumnFile = 0
 		}
 
 		_, err = s.dft.Next(currSymbol)
@@ -289,6 +304,11 @@ func (s *Scanner) Scan() Token {
 			s.clearLexemBuffer()
 			s.dft.Reset()
 			s.file.Seek(-1, os.SEEK_CUR)
+
+			s.currentColumnFile -= n
+			if currChar == '\n' {
+				s.currentLineFile -= 1
+			}
 
 			InsertSymbolTable(string(lexem), token)
 
