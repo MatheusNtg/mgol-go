@@ -223,7 +223,7 @@ func (s *Scanner) clearLexemBuffer() {
 	s.lexemBuffer = []byte{}
 }
 
-// Analyses a input symbol to check if it is in the Letter set,
+// Analyses an input symbol to check if it is in the Letter set,
 // Digit set, or neither.
 //
 // If the input symbol is in the Letter set, the letter 'L' is returned.
