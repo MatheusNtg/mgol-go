@@ -22,4 +22,4 @@ This is a compiler for mgol implemented in go for the final work of the compiler
 - [x] Implement symbol table
 - [x] Implement symbol table tests
 - [ ] Return elements from the symbol table
-- [x] Fix the rows and columns bug
+- [ ] Fix the rows and columns bug
