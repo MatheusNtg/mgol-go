@@ -33,7 +33,7 @@ func TestInsert(t *testing.T) {
 				NewToken(IDENTIFIER, "identi", NULL),
 				NewToken(LITERAL_CONST, `"an test"`, LITERAL),
 			},
-			errorIndex: 3,
+			errorIndex: 1,
 		},
 	}
 
