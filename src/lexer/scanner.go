@@ -276,8 +276,10 @@ func (s *Scanner) Scan() Token {
 
 			s.clearLexemBuffer()
 			s.dft.Reset()
-			InsertSymbolTable(string(lexem), token)
 
+			if token.class == IDENTIFIER {
+				return InsertSymbolTable(token.lexeme, token)
+			}
 			return token
 		}
 
@@ -310,8 +312,9 @@ func (s *Scanner) Scan() Token {
 				s.currentLineFile -= 1
 			}
 
-			InsertSymbolTable(string(lexem), token)
-
+			if token.class == IDENTIFIER {
+				return InsertSymbolTable(token.lexeme, token)
+			}
 			return token
 		}
 

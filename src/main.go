@@ -33,7 +33,4 @@ func main() {
 			break
 		}
 	}
-
-	// fmt.Println("Tabela de símbolos:")
-	// lexer.PrintSymbolTable()
 }

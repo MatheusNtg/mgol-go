@@ -8,45 +8,46 @@ import (
 
 func TestInsert(t *testing.T) {
 	testCases := []struct {
-		name          string
-		expectedError error
-		keys          []string
-		values        []Token
-		errorIndex    int
+		name           string
+		keys           []string
+		values         []Token
+		expectedResult []Token
 	}{
 		{
-			name:          "Insert without conflict",
-			expectedError: nil,
-			keys:          []string{"k1", "k2", "k3"},
+			name: "Insert without conflict",
+			keys: []string{"k1", "k2", "k3"},
 			values: []Token{
+				NewToken(COMMENT, "comment", NULL),
+				NewToken(IDENTIFIER, "identi", NULL),
+				NewToken(LITERAL_CONST, `"an test"`, LITERAL),
+			},
+			expectedResult: []Token{
 				NewToken(COMMENT, "comment", NULL),
 				NewToken(IDENTIFIER, "identi", NULL),
 				NewToken(LITERAL_CONST, `"an test"`, LITERAL),
 			},
 		},
 		{
-			name:          "Insert with conflict",
-			expectedError: ErrorAlreadyOnTable,
-			keys:          []string{"k1", "k1", "k3"},
+			name: "Insert with conflict",
+			keys: []string{"k1", "k1", "k3"},
 			values: []Token{
 				NewToken(COMMENT, "comment", NULL),
 				NewToken(IDENTIFIER, "identi", NULL),
 				NewToken(LITERAL_CONST, `"an test"`, LITERAL),
 			},
-			errorIndex: 1,
+			expectedResult: []Token{
+				NewToken(COMMENT, "comment", NULL),
+				NewToken(COMMENT, "comment", NULL),
+				NewToken(LITERAL_CONST, `"an test"`, LITERAL),
+			},
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for index, key := range tc.keys {
-				token, err := InsertSymbolTable(key, tc.values[index])
-				if tc.expectedError != nil && index == tc.errorIndex {
-					require.Error(t, err)
-					continue
-				}
-				require.NoError(t, err)
-				require.Equal(t, tc.values[index], token)
+				token := InsertSymbolTable(key, tc.values[index])
+				require.Equal(t, tc.expectedResult[index], token)
 			}
 			CleanupSymbolTable()
 		})

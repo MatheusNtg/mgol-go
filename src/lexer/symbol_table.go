@@ -12,15 +12,15 @@ var (
 
 var table = map[string]Token{}
 
-func InsertSymbolTable(id string, token Token) (Token, error) {
-	_, found := table[id]
+func InsertSymbolTable(id string, token Token) Token {
+	tok, found := table[id]
 	if found {
-		return Token{}, ErrorAlreadyOnTable
+		return tok
 	}
 
 	table[id] = token
 
-	return table[id], nil
+	return table[id]
 }
 
 func GetTokenFromSymbolTable(id string) (Token, error) {
