@@ -226,11 +226,19 @@ func (s *Scanner) clearLexemBuffer() {
 // Analyses an input symbol to check if it is in the Letter set,
 // Digit set, or neither.
 //
+// If the input symbol is the character 'E' or 'e' the symbol itself is returned.
 // If the input symbol is in the Letter set, the letter 'L' is returned.
 // If the input symbol is in the Digit set, the letter 'D' is returned.
 // If the input symbol is not in the Letter set or Digit set,
 // then the symbol itself is returned.
 func (s *Scanner) recognizeSymbol(symbol byte) byte {
+	// Special symbol reserved to represent the exponential character.
+	// The differenciation between 'E', 'e' and 'D' is important
+	// to fix a bug related to the representation of integer numbers
+	// with exponential
+	if symbol == 'E' || symbol == 'e' {
+		return symbol
+	}
 	// Letter set
 	if (symbol >= 'a' && symbol <= 'z') || (symbol >= 'A' && symbol <= 'Z') {
 		return 'L'
