@@ -11,15 +11,6 @@ var (
 	ErrorTransitionDoesNotExist = fmt.Errorf("Transition does not exist.")
 )
 
-func containsInt(slice []int, element int) bool {
-	for _, a := range slice {
-		if a == element {
-			return true
-		}
-	}
-	return false
-}
-
 type State int
 type Symbol byte
 
