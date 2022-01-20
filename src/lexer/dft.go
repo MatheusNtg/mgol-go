@@ -5,10 +5,10 @@ import (
 )
 
 var (
-	ErrorInvalidInitialState    = fmt.Errorf("Provided an invalid initial state")
-	ErrorInvalidFinalStateSet   = fmt.Errorf("Provided an invalid final state set")
-	ErrorNotFinalState          = fmt.Errorf("Provided state does not represent a final state.")
-	ErrorTransitionDoesNotExist = fmt.Errorf("Transition does not exist.")
+	ErrorInvalidInitialState    = fmt.Errorf("provided an invalid initial state")
+	ErrorInvalidFinalStateSet   = fmt.Errorf("provided an invalid final state set")
+	ErrorNotFinalState          = fmt.Errorf("provided state does not represent a final state")
+	ErrorTransitionDoesNotExist = fmt.Errorf("transition does not exist")
 )
 
 type State int

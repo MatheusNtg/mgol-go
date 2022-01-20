@@ -7,9 +7,9 @@ import (
 	"os"
 )
 
-func fillSymbolTable() {
+func fillSymbolTable(table *lexer.SymbolTable) {
 	for _, languageToken := range lexer.LanguageReservedTokens {
-		lexer.InsertSymbolTable(languageToken.GetLexem(), languageToken)
+		table.Insert(languageToken.GetLexem(), languageToken)
 	}
 }
 
@@ -22,10 +22,12 @@ func main() {
 	}
 	defer file.Close()
 
-	fillSymbolTable()
-	defer lexer.CleanupSymbolTable()
+	symbolTable := lexer.GetSymbolTableInstance()
 
-	scanner := lexer.NewScanner(file)
+	fillSymbolTable(symbolTable)
+	defer symbolTable.Cleanup()
+
+	scanner := lexer.NewScanner(file, symbolTable)
 	for {
 		token := scanner.Scan()
 		fmt.Println(token)

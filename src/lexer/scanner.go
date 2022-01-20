@@ -151,7 +151,7 @@ var (
 				reading: flatten([][]Symbol{
 					letters,
 					numbers,
-					{'"'},
+					{'_'},
 				}),
 			},
 		},
@@ -185,7 +185,7 @@ var (
 				from: 3,
 				to:   4,
 				reading: flatten([][]Symbol{
-					letters,
+					numbers,
 				}),
 			},
 		},
@@ -195,7 +195,7 @@ var (
 				from: 4,
 				to:   4,
 				reading: flatten([][]Symbol{
-					letters,
+					numbers,
 				}),
 			},
 			{
@@ -337,9 +337,10 @@ type Scanner struct {
 	dft                  Dft
 	stateToTokenClassMap map[State]TokenClass
 	symbolsToIgnore      []Symbol
+	symbolTable          *SymbolTable
 }
 
-func NewScanner(file *os.File) *Scanner {
+func NewScanner(file *os.File, symbolTable *SymbolTable) *Scanner {
 	dft, err := NewDft(alphabet, states, 0, finalStates, transitionMap)
 	if err != nil {
 		log.Fatal("Failed to create DFT:", err)
@@ -353,6 +354,7 @@ func NewScanner(file *os.File) *Scanner {
 		dft:                  *dft,
 		stateToTokenClassMap: stateToTokenClassMap,
 		symbolsToIgnore:      []Symbol{'\n', ' ', '\t'},
+		symbolTable:          symbolTable,
 	}
 }
 
@@ -414,7 +416,7 @@ func (s *Scanner) Scan() Token {
 			s.dft.Reset()
 
 			if token.class == IDENTIFIER {
-				return InsertSymbolTable(token.lexeme, token)
+				return s.symbolTable.Insert(token.lexeme, token)
 			}
 			return token
 		}
@@ -449,7 +451,7 @@ func (s *Scanner) Scan() Token {
 			}
 
 			if token.class == IDENTIFIER {
-				return InsertSymbolTable(token.lexeme, token)
+				return s.symbolTable.Insert(token.lexeme, token)
 			}
 			return token
 		}

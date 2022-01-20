@@ -91,7 +91,7 @@ func TestScanNumToken(t *testing.T) {
 
 			file.Seek(0, io.SeekStart)
 
-			scanner := NewScanner(file)
+			scanner := NewScanner(file, GetSymbolTableInstance())
 			tokens := []Token{}
 			for {
 				token := scanner.Scan()
@@ -145,7 +145,7 @@ func TestScanIdToken(t *testing.T) {
 
 			file.Seek(0, io.SeekStart)
 
-			scanner := NewScanner(file)
+			scanner := NewScanner(file, GetSymbolTableInstance())
 			token := scanner.Scan()
 
 			require.Equal(t, tc.expectedToken, token)
@@ -210,7 +210,7 @@ func TestScanCommentToken(t *testing.T) {
 
 			file.Seek(0, io.SeekStart)
 
-			scanner := NewScanner(file)
+			scanner := NewScanner(file, GetSymbolTableInstance())
 
 			for _, expectedToken := range tc.expectedToken {
 				token := scanner.Scan()
@@ -244,7 +244,7 @@ func TestScanLiteralConstantToken(t *testing.T) {
 
 			file.Seek(0, io.SeekStart)
 
-			scanner := NewScanner(file)
+			scanner := NewScanner(file, GetSymbolTableInstance())
 			token := scanner.Scan()
 
 			require.Equal(t, tc.expectedToken, token)
@@ -402,7 +402,7 @@ func TestScanGeneralCases(t *testing.T) {
 
 			file.Seek(0, io.SeekStart)
 
-			scanner := NewScanner(file)
+			scanner := NewScanner(file, GetSymbolTableInstance())
 
 			for _, expectedToken := range tc.expectedToken {
 				token := scanner.Scan()
