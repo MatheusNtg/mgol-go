@@ -10,60 +10,74 @@ import (
 
 func TestScanNumToken(t *testing.T) {
 	testCases := []struct {
-		name          string
-		preparedText  string
-		expectedToken Token
+		name           string
+		preparedText   string
+		expectedTokens []Token
 	}{
 		{
-			name:          "Integer number",
-			preparedText:  "1",
-			expectedToken: NewToken(NUM, "1", INTEGER),
+			name:           "Integer number",
+			preparedText:   "1",
+			expectedTokens: []Token{NewToken(NUM, "1", INTEGER)},
 		},
 		{
-			name:          "Real number",
-			preparedText:  "1.0",
-			expectedToken: NewToken(NUM, "1.0", REAL),
+			name:           "Real number",
+			preparedText:   "1.0",
+			expectedTokens: []Token{NewToken(NUM, "1.0", REAL)},
 		},
 		{
-			name:          "Integer with capital exponential positive",
-			preparedText:  "1E+0",
-			expectedToken: NewToken(NUM, "1E+0", INTEGER),
+			name:           "Integer with capital exponential positive",
+			preparedText:   "1E+0",
+			expectedTokens: []Token{NewToken(NUM, "1E+0", INTEGER)},
 		},
 		{
-			name:          "Integer with lower exponential positive",
-			preparedText:  "1e+0",
-			expectedToken: NewToken(NUM, "1e+0", INTEGER),
+			name:           "Integer with lower exponential positive",
+			preparedText:   "1e+0",
+			expectedTokens: []Token{NewToken(NUM, "1e+0", INTEGER)},
 		},
 		{
-			name:          "Integer with capital exponential negative",
-			preparedText:  "1E-0",
-			expectedToken: NewToken(NUM, "1E-0", INTEGER),
+			name:           "Integer with capital exponential negative",
+			preparedText:   "1E-0",
+			expectedTokens: []Token{NewToken(NUM, "1E-0", INTEGER)},
 		},
 		{
-			name:          "Integer with lower exponential negative",
-			preparedText:  "1e-0",
-			expectedToken: NewToken(NUM, "1e-0", INTEGER),
+			name:           "Integer with lower exponential negative",
+			preparedText:   "1e-0",
+			expectedTokens: []Token{NewToken(NUM, "1e-0", INTEGER)},
 		},
 		{
-			name:          "Real number with capital exponential positive",
-			preparedText:  "1.E+0",
-			expectedToken: NewToken(NUM, "1.E+0", REAL),
+			name:         "Incomplete real number with capital exponential positive",
+			preparedText: "1.E+0",
+			expectedTokens: []Token{
+				ERROR_TOKEN,
+				NewToken(IDENTIFIER, "E", NULL),
+				NewToken(ARIT_OP, "+", NULL),
+				NewToken(NUM, "0", INTEGER),
+			},
 		},
-		{
-			name:          "Real number with capital exponential positive",
-			preparedText:  "1.e+0",
-			expectedToken: NewToken(NUM, "1.e+0", REAL),
-		},
-		{
-			name:          "Real number with capital exponential negative",
-			preparedText:  "1.E-0",
-			expectedToken: NewToken(NUM, "1.E-0", REAL),
-		},
-		{
-			name:          "Real number with lower exponential negative",
-			preparedText:  "1.e-0",
-			expectedToken: NewToken(NUM, "1.e-0", REAL),
-		},
+		// {
+		// 	name:         "Incomplete real number with capital exponential positive",
+		// 	preparedText: "1.e+0",
+		// 	expectedTokens: []Token{
+		// 		NewToken(NUM, "1", INTEGER),
+		// 		ERROR_TOKEN,
+		// 	},
+		// },
+		// {
+		// 	name:         "Incomplete real number with capital exponential negative",
+		// 	preparedText: "1.E-0",
+		// 	expectedTokens: []Token{
+		// 		NewToken(NUM, "1", INTEGER),
+		// 		ERROR_TOKEN,
+		// 	},
+		// },
+		// {
+		// 	name:         "Incomplete real number with lower exponential negative",
+		// 	preparedText: "1.e-0",
+		// 	expectedTokens: []Token{
+		// 		NewToken(NUM, "1", INTEGER),
+		// 		ERROR_TOKEN,
+		// 	},
+		// },
 	}
 
 	for _, tc := range testCases {
@@ -78,9 +92,16 @@ func TestScanNumToken(t *testing.T) {
 			file.Seek(0, io.SeekStart)
 
 			scanner := NewScanner(file)
-			token := scanner.Scan()
+			tokens := []Token{}
+			for {
+				token := scanner.Scan()
+				if token == EOF_TOKEN {
+					break
+				}
+				tokens = append(tokens, token)
+			}
 
-			require.Equal(t, tc.expectedToken, token)
+			require.Equal(t, tc.expectedTokens, tokens)
 		})
 	}
 }
