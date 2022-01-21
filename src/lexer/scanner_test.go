@@ -115,7 +115,6 @@ func TestScanNumToken(t *testing.T) {
 			preparedText: "1.E+0",
 			expectedTokens: []Token{
 				ERROR_TOKEN,
-				NewToken(IDENTIFIER, "E", NULL),
 				NewToken(ARIT_OP, "+", NULL),
 				NewToken(NUM, "0", INTEGER),
 			},
@@ -125,7 +124,6 @@ func TestScanNumToken(t *testing.T) {
 			preparedText: "1.e+0",
 			expectedTokens: []Token{
 				ERROR_TOKEN,
-				NewToken(IDENTIFIER, "e", NULL),
 				NewToken(ARIT_OP, "+", NULL),
 				NewToken(NUM, "0", INTEGER),
 			},
@@ -135,7 +133,6 @@ func TestScanNumToken(t *testing.T) {
 			preparedText: "1.E-0",
 			expectedTokens: []Token{
 				ERROR_TOKEN,
-				NewToken(IDENTIFIER, "E", NULL),
 				NewToken(ARIT_OP, "-", NULL),
 				NewToken(NUM, "0", INTEGER),
 			},
@@ -145,7 +142,6 @@ func TestScanNumToken(t *testing.T) {
 			preparedText: "1.e-0",
 			expectedTokens: []Token{
 				ERROR_TOKEN,
-				NewToken(IDENTIFIER, "e", NULL),
 				NewToken(ARIT_OP, "-", NULL),
 				NewToken(NUM, "0", INTEGER),
 			},
