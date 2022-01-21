@@ -362,6 +362,8 @@ func (s *Scanner) getTokenClass(state State) TokenClass {
 	return s.stateToTokenClassMap[state]
 }
 
+// Recognizes if a number is integer or real and
+// changes the dataType accordingly
 func (s *Scanner) updateDataType(token *Token) {
 	switch token.class {
 	case NUM:
@@ -457,15 +459,14 @@ func (s *Scanner) Scan() Token {
 		}
 
 		if errors.Is(err, ErrorTransitionDoesNotExist) && !s.dft.IsFinalState() {
+			if currChar == ' ' || currChar == '\n' || currChar == '\t' {
+				continue
+			}
+
 			log.Printf("Padrão \"%s\" não existente na linguagem", fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
 			s.clearLexemBuffer()
 			s.dft.Reset()
-			s.file.Seek(-1, os.SEEK_CUR)
 
-			s.currentColumnFile -= n
-			if currChar == '\n' {
-				s.currentLineFile -= 1
-			}
 			return ERROR_TOKEN
 		}
 

@@ -8,6 +8,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func fillSymbolTable(table *SymbolTable) {
+	for _, languageToken := range LanguageReservedTokens {
+		table.Insert(languageToken.GetLexem(), languageToken)
+	}
+}
+
 func TestScanNumToken(t *testing.T) {
 	testCases := []struct {
 		name           string
@@ -20,9 +26,49 @@ func TestScanNumToken(t *testing.T) {
 			expectedTokens: []Token{NewToken(NUM, "1", INTEGER)},
 		},
 		{
+			name:           "Integer number with N digits",
+			preparedText:   "123",
+			expectedTokens: []Token{NewToken(NUM, "123", INTEGER)},
+		},
+		{
 			name:           "Real number",
 			preparedText:   "1.0",
 			expectedTokens: []Token{NewToken(NUM, "1.0", REAL)},
+		},
+		{
+			name:           "Real number with N digits after point",
+			preparedText:   "1.000",
+			expectedTokens: []Token{NewToken(NUM, "1.000", REAL)},
+		},
+		{
+			name:           "Real number with N digits before point",
+			preparedText:   "123.0",
+			expectedTokens: []Token{NewToken(NUM, "123.0", REAL)},
+		},
+		{
+			name:           "Real number with N digits before and after point",
+			preparedText:   "123.000",
+			expectedTokens: []Token{NewToken(NUM, "123.000", REAL)},
+		},
+		{
+			name:           "Integer with capital exponential",
+			preparedText:   "1E0",
+			expectedTokens: []Token{NewToken(NUM, "1E0", INTEGER)},
+		},
+		{
+			name:           "Integer with lower exponential",
+			preparedText:   "1e0",
+			expectedTokens: []Token{NewToken(NUM, "1e0", INTEGER)},
+		},
+		{
+			name:           "Incomplete real number with capital exponential",
+			preparedText:   "1.0E0",
+			expectedTokens: []Token{NewToken(NUM, "1.0E0", REAL)},
+		},
+		{
+			name:           "Incomplete real number with capital exponential",
+			preparedText:   "1.0e0",
+			expectedTokens: []Token{NewToken(NUM, "1.0e0", REAL)},
 		},
 		{
 			name:           "Integer with capital exponential positive",
@@ -45,7 +91,27 @@ func TestScanNumToken(t *testing.T) {
 			expectedTokens: []Token{NewToken(NUM, "1e-0", INTEGER)},
 		},
 		{
-			name:         "Incomplete real number with capital exponential positive",
+			name:           "Incomplete real number with capital exponential positive",
+			preparedText:   "1.0E+0",
+			expectedTokens: []Token{NewToken(NUM, "1.0E+0", REAL)},
+		},
+		{
+			name:           "Incomplete real number with capital exponential positive",
+			preparedText:   "1.0e+0",
+			expectedTokens: []Token{NewToken(NUM, "1.0e+0", REAL)},
+		},
+		{
+			name:           "Incomplete real number with capital exponential negative",
+			preparedText:   "1.0E-0",
+			expectedTokens: []Token{NewToken(NUM, "1.0E-0", REAL)},
+		},
+		{
+			name:           "Incomplete real number with lower exponential negative",
+			preparedText:   "1.0e-0",
+			expectedTokens: []Token{NewToken(NUM, "1.0e-0", REAL)},
+		},
+		{
+			name:         "Error incomplete real number with capital exponential positive",
 			preparedText: "1.E+0",
 			expectedTokens: []Token{
 				ERROR_TOKEN,
@@ -54,30 +120,36 @@ func TestScanNumToken(t *testing.T) {
 				NewToken(NUM, "0", INTEGER),
 			},
 		},
-		// {
-		// 	name:         "Incomplete real number with capital exponential positive",
-		// 	preparedText: "1.e+0",
-		// 	expectedTokens: []Token{
-		// 		NewToken(NUM, "1", INTEGER),
-		// 		ERROR_TOKEN,
-		// 	},
-		// },
-		// {
-		// 	name:         "Incomplete real number with capital exponential negative",
-		// 	preparedText: "1.E-0",
-		// 	expectedTokens: []Token{
-		// 		NewToken(NUM, "1", INTEGER),
-		// 		ERROR_TOKEN,
-		// 	},
-		// },
-		// {
-		// 	name:         "Incomplete real number with lower exponential negative",
-		// 	preparedText: "1.e-0",
-		// 	expectedTokens: []Token{
-		// 		NewToken(NUM, "1", INTEGER),
-		// 		ERROR_TOKEN,
-		// 	},
-		// },
+		{
+			name:         "Error incomplete real number with capital exponential positive",
+			preparedText: "1.e+0",
+			expectedTokens: []Token{
+				ERROR_TOKEN,
+				NewToken(IDENTIFIER, "e", NULL),
+				NewToken(ARIT_OP, "+", NULL),
+				NewToken(NUM, "0", INTEGER),
+			},
+		},
+		{
+			name:         "Error incomplete real number with capital exponential negative",
+			preparedText: "1.E-0",
+			expectedTokens: []Token{
+				ERROR_TOKEN,
+				NewToken(IDENTIFIER, "E", NULL),
+				NewToken(ARIT_OP, "-", NULL),
+				NewToken(NUM, "0", INTEGER),
+			},
+		},
+		{
+			name:         "Error incomplete real number with lower exponential negative",
+			preparedText: "1.e-0",
+			expectedTokens: []Token{
+				ERROR_TOKEN,
+				NewToken(IDENTIFIER, "e", NULL),
+				NewToken(ARIT_OP, "-", NULL),
+				NewToken(NUM, "0", INTEGER),
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -164,38 +236,43 @@ func TestScanCommentToken(t *testing.T) {
 			preparedText: "{{{ab}",
 			expectedToken: []Token{
 				NewToken(COMMENT, "{{{ab}", NULL),
-				NewToken(EOF, "", NULL)},
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Close comment twice with characters in between",
 			preparedText: "{ab}ab}",
 			expectedToken: []Token{
 				NewToken(COMMENT, "{ab}", NULL),
-				NewToken(ERROR, "", NULL),
-				NewToken(EOF, "", NULL)},
+				ERROR_TOKEN,
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Close comment twice",
 			preparedText: "{{abab}}",
 			expectedToken: []Token{
 				NewToken(COMMENT, "{{abab}", NULL),
-				NewToken(ERROR, "", NULL),
-				NewToken(EOF, "", NULL)},
+				ERROR_TOKEN,
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Comment not closed",
 			preparedText: "{{abab",
 			expectedToken: []Token{
-				NewToken(ERROR, "", NULL),
-				NewToken(EOF, "", NULL)},
+				ERROR_TOKEN,
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Comment not open",
 			preparedText: "abab}}",
 			expectedToken: []Token{
-				NewToken(ERROR, "", NULL),
-				NewToken(ERROR, "", NULL),
-				NewToken(EOF, "", NULL)},
+				ERROR_TOKEN,
+				ERROR_TOKEN,
+				EOF_TOKEN,
+			},
 		},
 	}
 
@@ -263,31 +340,34 @@ func TestScanGeneralCases(t *testing.T) {
 			preparedText: "A<-B",
 			expectedToken: []Token{
 				NewToken(IDENTIFIER, "A", NULL),
-				NewToken(ATTR, "<-", NULL),
+				ATTR_TOKEN,
 				NewToken(IDENTIFIER, "B", NULL),
-				NewToken(EOF, "", NULL)},
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Assignment with sum",
 			preparedText: "A<-B+C",
 			expectedToken: []Token{
 				NewToken(IDENTIFIER, "A", NULL),
-				NewToken(ATTR, "<-", NULL),
+				ATTR_TOKEN,
 				NewToken(IDENTIFIER, "B", NULL),
 				NewToken(ARIT_OP, "+", NULL),
 				NewToken(IDENTIFIER, "C", NULL),
-				NewToken(EOF, "", NULL)},
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Assignment with subtraction",
 			preparedText: "A<-B-C",
 			expectedToken: []Token{
 				NewToken(IDENTIFIER, "A", NULL),
-				NewToken(ATTR, "<-", NULL),
+				ATTR_TOKEN,
 				NewToken(IDENTIFIER, "B", NULL),
 				NewToken(ARIT_OP, "-", NULL),
 				NewToken(IDENTIFIER, "C", NULL),
-				NewToken(EOF, "", NULL)},
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Less than or greater than",
@@ -296,7 +376,8 @@ func TestScanGeneralCases(t *testing.T) {
 				NewToken(IDENTIFIER, "A", NULL),
 				NewToken(REL_OP, "<>", NULL),
 				NewToken(IDENTIFIER, "B", NULL),
-				NewToken(EOF, "", NULL)},
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Less than or equal",
@@ -305,7 +386,8 @@ func TestScanGeneralCases(t *testing.T) {
 				NewToken(IDENTIFIER, "A", NULL),
 				NewToken(REL_OP, "<=", NULL),
 				NewToken(IDENTIFIER, "B", NULL),
-				NewToken(EOF, "", NULL)},
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Greater than or equal",
@@ -314,7 +396,8 @@ func TestScanGeneralCases(t *testing.T) {
 				NewToken(IDENTIFIER, "A", NULL),
 				NewToken(REL_OP, ">=", NULL),
 				NewToken(IDENTIFIER, "B", NULL),
-				NewToken(EOF, "", NULL)},
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Equal",
@@ -323,7 +406,8 @@ func TestScanGeneralCases(t *testing.T) {
 				NewToken(IDENTIFIER, "A", NULL),
 				NewToken(REL_OP, "=", NULL),
 				NewToken(IDENTIFIER, "B", NULL),
-				NewToken(EOF, "", NULL)},
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Less than",
@@ -332,7 +416,8 @@ func TestScanGeneralCases(t *testing.T) {
 				NewToken(IDENTIFIER, "A", NULL),
 				NewToken(REL_OP, "<", NULL),
 				NewToken(IDENTIFIER, "B", NULL),
-				NewToken(EOF, "", NULL)},
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Greater than",
@@ -341,26 +426,28 @@ func TestScanGeneralCases(t *testing.T) {
 				NewToken(IDENTIFIER, "A", NULL),
 				NewToken(REL_OP, ">", NULL),
 				NewToken(IDENTIFIER, "B", NULL),
-				NewToken(EOF, "", NULL)},
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Operation with comparison between parentheses",
 			preparedText: "(A+B<>C)",
 			expectedToken: []Token{
-				NewToken(OPEN_PAR, "(", NULL),
+				OPEN_PAR_TOKEN,
 				NewToken(IDENTIFIER, "A", NULL),
 				NewToken(ARIT_OP, "+", NULL),
 				NewToken(IDENTIFIER, "B", NULL),
 				NewToken(REL_OP, "<>", NULL),
 				NewToken(IDENTIFIER, "C", NULL),
-				NewToken(CLOSE_PAR, ")", NULL),
-				NewToken(EOF, "", NULL)},
+				CLOSE_PAR_TOKEN,
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Two Operations with comparisons between parentheses and semicolon",
 			preparedText: "(A+B<>C/D);",
 			expectedToken: []Token{
-				NewToken(OPEN_PAR, "(", NULL),
+				OPEN_PAR_TOKEN,
 				NewToken(IDENTIFIER, "A", NULL),
 				NewToken(ARIT_OP, "+", NULL),
 				NewToken(IDENTIFIER, "B", NULL),
@@ -368,16 +455,17 @@ func TestScanGeneralCases(t *testing.T) {
 				NewToken(IDENTIFIER, "C", NULL),
 				NewToken(ARIT_OP, "/", NULL),
 				NewToken(IDENTIFIER, "D", NULL),
-				NewToken(CLOSE_PAR, ")", NULL),
-				NewToken(SEMICOLON, ";", NULL),
-				NewToken(EOF, "", NULL)},
+				CLOSE_PAR_TOKEN,
+				SEMICOLON_TOKEN,
+				EOF_TOKEN,
+			},
 		},
 		{
 			name:         "Two Operations with comparisons between parentheses and semicolon",
 			preparedText: "se(A+B<>C/D);",
 			expectedToken: []Token{
 				NewToken("se", "se", "se"),
-				NewToken(OPEN_PAR, "(", NULL),
+				OPEN_PAR_TOKEN,
 				NewToken(IDENTIFIER, "A", NULL),
 				NewToken(ARIT_OP, "+", NULL),
 				NewToken(IDENTIFIER, "B", NULL),
@@ -385,11 +473,27 @@ func TestScanGeneralCases(t *testing.T) {
 				NewToken(IDENTIFIER, "C", NULL),
 				NewToken(ARIT_OP, "/", NULL),
 				NewToken(IDENTIFIER, "D", NULL),
-				NewToken(CLOSE_PAR, ")", NULL),
-				NewToken(SEMICOLON, ";", NULL),
-				NewToken(EOF, "", NULL)},
+				CLOSE_PAR_TOKEN,
+				SEMICOLON_TOKEN,
+				EOF_TOKEN,
+			},
+		},
+		{
+			name:         "Escreva with jump line",
+			preparedText: `escreva "\nA=\n";`,
+			expectedToken: []Token{
+				NewToken("escreva", "escreva", "escreva"),
+				NewToken(LITERAL_CONST, `"\nA=\n"`, LITERAL),
+				SEMICOLON_TOKEN,
+				EOF_TOKEN,
+			},
 		},
 	}
+
+	symbolTable := GetSymbolTableInstance()
+
+	fillSymbolTable(symbolTable)
+	defer symbolTable.Cleanup()
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
