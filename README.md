@@ -23,4 +23,4 @@ This is a compiler for mgol implemented in go for the final work of the compiler
 - [x] Implement symbol table tests
 - [x] Return elements from the symbol table
 - [ ] Fix the rows and columns bug
-- [ ] Fix bug where the transition does not exist and is not a final state
+- [x] Fix bug where the transition does not exist and is not a final state

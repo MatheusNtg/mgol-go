@@ -26,3 +26,9 @@ func ContainsByte(bytes []byte, element byte) bool {
 	}
 	return false
 }
+
+func FillSymbolTable(table *SymbolTable) {
+	for _, languageToken := range LanguageReservedTokens {
+		table.Insert(languageToken.GetLexem(), languageToken)
+	}
+}

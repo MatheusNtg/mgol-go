@@ -8,12 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func fillSymbolTable(table *SymbolTable) {
-	for _, languageToken := range LanguageReservedTokens {
-		table.Insert(languageToken.GetLexem(), languageToken)
-	}
-}
-
 func TestScanNumToken(t *testing.T) {
 	testCases := []struct {
 		name           string
@@ -488,7 +482,7 @@ func TestScanGeneralCases(t *testing.T) {
 
 	symbolTable := GetSymbolTableInstance()
 
-	fillSymbolTable(symbolTable)
+	FillSymbolTable(symbolTable)
 	defer symbolTable.Cleanup()
 
 	for _, tc := range testCases {
