@@ -10,48 +10,58 @@ var (
 	ErrorSymbolNotFound = fmt.Errorf("the specified symbol doesn't exists on the symbol table")
 )
 
-var table = map[string]Token{}
+type SymbolTable struct {
+	table map[string]Token
+}
 
-func InsertSymbolTable(id string, token Token) Token {
-	tok, found := table[id]
+var symbolTableInstance *SymbolTable
+
+func GetSymbolTableInstance() *SymbolTable {
+	if symbolTableInstance == nil {
+		symbolTableInstance = &SymbolTable{
+			table: make(map[string]Token),
+		}
+		return symbolTableInstance
+	}
+	return symbolTableInstance
+}
+
+func (s *SymbolTable) Insert(id string, token Token) Token {
+	tok, found := s.table[id]
 	if found {
 		return tok
 	}
 
-	table[id] = token
+	s.table[id] = token
 
-	return table[id]
+	return s.table[id]
 }
 
-func GetTokenFromSymbolTable(id string) (Token, error) {
-	token, found := table[id]
+func (s *SymbolTable) GetToken(lexem string) (Token, error) {
+	token, found := s.table[lexem]
 	if !found {
 		return Token{}, ErrorSymbolNotFound
 	}
 	return token, nil
 }
 
-func UpdateSymbolTable(id string, newToken Token) error {
-	_, found := table[id]
+func (s *SymbolTable) Update(id string, newToken Token) error {
+	_, found := s.table[id]
 	if !found {
 		return ErrorSymbolNotFound
 	}
-	table[id] = newToken
+	s.table[id] = newToken
 	return nil
 }
 
-func CleanupSymbolTable() {
-	for k := range table {
-		delete(table, k)
+func (s *SymbolTable) Cleanup() {
+	for k := range s.table {
+		delete(s.table, k)
 	}
 }
 
-func GetSymbolTable() map[string]Token {
-	return table
-}
-
-func PrintSymbolTable() {
-	for k, v := range table {
+func (s *SymbolTable) Print() {
+	for k, v := range s.table {
 		fmt.Printf("Chave: %v, Valor: %v\n", k, v)
 	}
 }

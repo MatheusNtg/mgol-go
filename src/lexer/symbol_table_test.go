@@ -43,13 +43,15 @@ func TestInsert(t *testing.T) {
 		},
 	}
 
+	symbolTable := GetSymbolTableInstance()
+
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			for index, key := range tc.keys {
-				token := InsertSymbolTable(key, tc.values[index])
+				token := symbolTable.Insert(key, tc.values[index])
 				require.Equal(t, tc.expectedResult[index], token)
 			}
-			CleanupSymbolTable()
+			symbolTable.Cleanup()
 		})
 	}
 }
@@ -58,17 +60,17 @@ func TestGetToken(t *testing.T) {
 	testCases := []struct {
 		name            string
 		expectedError   error
-		prepareFunction func()
+		prepareFunction func(table *SymbolTable)
 		key             string
 		expectedToken   Token
 	}{
 		{
 			name:          "Get existing token",
 			expectedError: nil,
-			prepareFunction: func() {
-				InsertSymbolTable("k1", ATTR_TOKEN)
-				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
-				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
+			prepareFunction: func(table *SymbolTable) {
+				table.Insert("k1", ATTR_TOKEN)
+				table.Insert("k2", CLOSE_PAR_TOKEN)
+				table.Insert("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k2",
 			expectedToken: CLOSE_PAR_TOKEN,
@@ -76,10 +78,10 @@ func TestGetToken(t *testing.T) {
 		{
 			name:          "Get non-existing token",
 			expectedError: ErrorSymbolNotFound,
-			prepareFunction: func() {
-				InsertSymbolTable("k1", ATTR_TOKEN)
-				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
-				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
+			prepareFunction: func(table *SymbolTable) {
+				table.Insert("k1", ATTR_TOKEN)
+				table.Insert("k2", CLOSE_PAR_TOKEN)
+				table.Insert("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k7",
 			expectedToken: Token{},
@@ -87,10 +89,10 @@ func TestGetToken(t *testing.T) {
 		{
 			name:          "Get existing token on confliting table",
 			expectedError: nil,
-			prepareFunction: func() {
-				InsertSymbolTable("k1", ATTR_TOKEN)
-				InsertSymbolTable("k1", CLOSE_PAR_TOKEN)
-				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
+			prepareFunction: func(table *SymbolTable) {
+				table.Insert("k1", ATTR_TOKEN)
+				table.Insert("k1", CLOSE_PAR_TOKEN)
+				table.Insert("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k1",
 			expectedToken: ATTR_TOKEN,
@@ -98,10 +100,10 @@ func TestGetToken(t *testing.T) {
 		{
 			name:          "Get non-existing token on confliting table",
 			expectedError: ErrorSymbolNotFound,
-			prepareFunction: func() {
-				InsertSymbolTable("k1", ATTR_TOKEN)
-				InsertSymbolTable("k1", CLOSE_PAR_TOKEN)
-				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
+			prepareFunction: func(table *SymbolTable) {
+				table.Insert("k1", ATTR_TOKEN)
+				table.Insert("k1", CLOSE_PAR_TOKEN)
+				table.Insert("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k7",
 			expectedToken: Token{},
@@ -110,15 +112,16 @@ func TestGetToken(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.prepareFunction()
-			token, err := GetTokenFromSymbolTable(tc.key)
+			table := GetSymbolTableInstance()
+			tc.prepareFunction(table)
+			token, err := table.GetToken(tc.key)
 			if tc.expectedError != nil {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
 			}
 			require.Equal(t, tc.expectedToken, token)
-			CleanupSymbolTable()
+			table.Cleanup()
 		})
 	}
 }
@@ -127,7 +130,7 @@ func TestUpdate(t *testing.T) {
 	testCases := []struct {
 		name            string
 		expectedError   error
-		prepareFunction func()
+		prepareFunction func(table *SymbolTable)
 		key             string
 		newToken        Token
 		expectedToken   Token
@@ -135,10 +138,10 @@ func TestUpdate(t *testing.T) {
 		{
 			name:          "Successfully update",
 			expectedError: nil,
-			prepareFunction: func() {
-				InsertSymbolTable("k1", ATTR_TOKEN)
-				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
-				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
+			prepareFunction: func(table *SymbolTable) {
+				table.Insert("k1", ATTR_TOKEN)
+				table.Insert("k2", CLOSE_PAR_TOKEN)
+				table.Insert("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k2",
 			newToken:      EOF_TOKEN,
@@ -147,10 +150,10 @@ func TestUpdate(t *testing.T) {
 		{
 			name:          "Update an non-existing token",
 			expectedError: ErrorSymbolNotFound,
-			prepareFunction: func() {
-				InsertSymbolTable("k1", ATTR_TOKEN)
-				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
-				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
+			prepareFunction: func(table *SymbolTable) {
+				table.Insert("k1", ATTR_TOKEN)
+				table.Insert("k2", CLOSE_PAR_TOKEN)
+				table.Insert("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k4",
 			newToken:      Token{},
@@ -159,11 +162,11 @@ func TestUpdate(t *testing.T) {
 		{
 			name:          "Successfully update on conflict tables",
 			expectedError: nil,
-			prepareFunction: func() {
-				InsertSymbolTable("k1", ATTR_TOKEN)
-				InsertSymbolTable("k1", ATTR_TOKEN)
-				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
-				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
+			prepareFunction: func(table *SymbolTable) {
+				table.Insert("k1", ATTR_TOKEN)
+				table.Insert("k1", ATTR_TOKEN)
+				table.Insert("k2", CLOSE_PAR_TOKEN)
+				table.Insert("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k2",
 			newToken:      EOF_TOKEN,
@@ -172,11 +175,11 @@ func TestUpdate(t *testing.T) {
 		{
 			name:          "Update an non-existing token on conflict tables",
 			expectedError: ErrorSymbolNotFound,
-			prepareFunction: func() {
-				InsertSymbolTable("k1", ATTR_TOKEN)
-				InsertSymbolTable("k1", ATTR_TOKEN)
-				InsertSymbolTable("k2", CLOSE_PAR_TOKEN)
-				InsertSymbolTable("k3", OPEN_PAR_TOKEN)
+			prepareFunction: func(table *SymbolTable) {
+				table.Insert("k1", ATTR_TOKEN)
+				table.Insert("k1", ATTR_TOKEN)
+				table.Insert("k2", CLOSE_PAR_TOKEN)
+				table.Insert("k3", OPEN_PAR_TOKEN)
 			},
 			key:           "k4",
 			newToken:      Token{},
@@ -186,16 +189,22 @@ func TestUpdate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			tc.prepareFunction()
-			err := UpdateSymbolTable(tc.key, tc.newToken)
+			table := GetSymbolTableInstance()
+
+			tc.prepareFunction(table)
+
+			err := table.Update(tc.key, tc.newToken)
 			if tc.expectedError != nil {
 				require.Error(t, err)
 			} else {
+				accquiredToken, err := table.GetToken(tc.key)
+				require.NoError(t, err)
+
+				require.Equal(t, tc.expectedToken, accquiredToken)
 				require.NoError(t, err)
 			}
-			table := GetSymbolTable()
-			require.Equal(t, tc.expectedToken, table[tc.key])
-			CleanupSymbolTable()
+
+			table.Cleanup()
 		})
 	}
 }

@@ -9,142 +9,307 @@ import (
 	"strings"
 )
 
+func letterGenerator() []Symbol {
+	result := []Symbol{}
+
+	for i := 'a'; i <= 'z'; i++ {
+		result = append(result, Symbol(i))
+	}
+
+	for i := 'A'; i <= 'Z'; i++ {
+		result = append(result, Symbol(i))
+	}
+
+	return result
+}
+
+func numGenerator() []Symbol {
+	result := []Symbol{}
+
+	for i := '0'; i <= '9'; i++ {
+		result = append(result, Symbol(i))
+	}
+
+	return result
+}
+
 var (
-	alphabet = []byte{
-		'\n', '\t', ' ', 'L', 'D',
-		'_', '+', '-', '*', '/',
-		'>', '<', '=', '{', '}',
-		'(', ')', ';', '"', '.',
-		'E', 'e', ':', ',', '!',
-		'?', '[', ']', '\\',
+	letters = letterGenerator()
+	numbers = numGenerator()
+)
+
+func flatten(symbols [][]Symbol) []Symbol {
+	result := []Symbol{}
+
+	for _, arr := range symbols {
+		result = append(result, arr...)
 	}
-	states        = []int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22}
-	finalStates   = []int{1, 2, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 22}
-	transitionMap = map[int]map[byte]int{
+
+	return result
+}
+
+var (
+	alphabet = flatten([][]Symbol{
+		letters,
+		numbers,
+		{
+			'\n', '\t', ' ',
+			'_', '+', '-', '*', '/',
+			'>', '<', '=', '{', '}',
+			'(', ')', ';', '"', '.',
+			'E', 'e', ':', ',', '!',
+			'?', '[', ']', '\\',
+		},
+	})
+	states        = []State{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22}
+	finalStates   = []State{1, 2, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 22}
+	transitionMap = map[State][]Transition{
 		0: {
-			'\n': 0,
-			'\t': 0,
-			' ':  0,
-			'L':  1, // L is the set that represents all the letters of the alphabet, low and capital case
-			'D':  2,
-			'<':  8,
-			'>':  10,
-			'=':  12, // Relational operator
-			'+':  14, // Arithmitec Operator
-			'-':  14,
-			'*':  14,
-			'/':  14,
-			'(':  15, // Open brackets
-			')':  16, // Closed brackets
-			';':  17, // Semi columns
-			'{':  19,
-			'"':  21,
+			{
+				from: 0,
+				to:   1,
+				reading: flatten([][]Symbol{
+					letters,
+				}),
+			},
+			{
+				from: 0,
+				to:   2,
+				reading: flatten([][]Symbol{
+					numbers,
+				}),
+			},
+			{
+				from: 0,
+				to:   8,
+				reading: flatten([][]Symbol{
+					{'<'},
+				}),
+			},
+			{
+				from: 0,
+				to:   10,
+				reading: flatten([][]Symbol{
+					{'>'},
+				}),
+			},
+			{
+				from: 0,
+				to:   12,
+				reading: flatten([][]Symbol{
+					{'='},
+				}),
+			},
+			{
+				from: 0,
+				to:   14,
+				reading: flatten([][]Symbol{
+					{'+', '-', '*', '/'},
+				}),
+			},
+			{
+				from: 0,
+				to:   15,
+				reading: flatten([][]Symbol{
+					{'('},
+				}),
+			},
+			{
+				from: 0,
+				to:   16,
+				reading: flatten([][]Symbol{
+					{')'},
+				}),
+			},
+			{
+				from: 0,
+				to:   17,
+				reading: flatten([][]Symbol{
+					{';'},
+				}),
+			},
+			{
+				from: 0,
+				to:   19,
+				reading: flatten([][]Symbol{
+					{'{'},
+				}),
+			},
+			{
+				from: 0,
+				to:   21,
+				reading: flatten([][]Symbol{
+					{'"'},
+				}),
+			},
 		},
-		// Identifier
+
 		1: {
-			'L': 1,
-			'D': 1, // D is the set that represents all numbers from 0 to 9
-			'_': 1,
+			{
+				from: 1,
+				to:   1,
+				reading: flatten([][]Symbol{
+					letters,
+					numbers,
+					{'_'},
+				}),
+			},
 		},
-		// Numeric Constants
+
 		2: {
-			'D': 2,
-			'.': 3,
-			'E': 5,
-			'e': 5,
+			{
+				from: 2,
+				to:   2,
+				reading: flatten([][]Symbol{
+					numbers,
+				}),
+			},
+			{
+				from: 2,
+				to:   3,
+				reading: flatten([][]Symbol{
+					{'.'},
+				}),
+			},
+			{
+				from: 2,
+				to:   5,
+				reading: flatten([][]Symbol{
+					{'e', 'E'},
+				}),
+			},
 		},
+
 		3: {
-			'D': 4,
+			{
+				from: 3,
+				to:   4,
+				reading: flatten([][]Symbol{
+					numbers,
+				}),
+			},
 		},
+
 		4: {
-			'D': 4,
-			'E': 5,
-			'e': 5,
+			{
+				from: 4,
+				to:   4,
+				reading: flatten([][]Symbol{
+					numbers,
+				}),
+			},
+			{
+				from: 4,
+				to:   5,
+				reading: flatten([][]Symbol{
+					{'e', 'E'},
+				}),
+			},
 		},
+
 		5: {
-			'+': 6,
-			'-': 6,
-			'D': 7,
+			{
+				from: 5,
+				to:   6,
+				reading: flatten([][]Symbol{
+					{'+', '-'},
+				}),
+			},
+			{
+				from: 5,
+				to:   7,
+				reading: flatten([][]Symbol{
+					numbers,
+				}),
+			},
 		},
+
 		6: {
-			'D': 7,
+			{
+				from: 6,
+				to:   7,
+				reading: flatten([][]Symbol{
+					numbers,
+				}),
+			},
 		},
+
 		7: {
-			'D': 7,
+			{
+				from: 7,
+				to:   7,
+				reading: flatten([][]Symbol{
+					numbers,
+				}),
+			},
 		},
-		// Relational operator
+
 		8: {
-			'>': 9,
-			'=': 9,
-			'-': 13, // Attribute
+			{
+				from: 8,
+				to:   9,
+				reading: flatten([][]Symbol{
+					{'>', '='},
+				}),
+			},
+			{
+				from: 8,
+				to:   13,
+				reading: flatten([][]Symbol{
+					{'-'},
+				}),
+			},
 		},
+
 		10: {
-			'=': 11,
+			{
+				from: 10,
+				to:   11,
+				reading: flatten([][]Symbol{
+					{'='},
+				}),
+			},
 		},
+
 		19: {
-			'\t': 19,
-			'\n': 19,
-			' ':  19,
-			'L':  19,
-			'D':  19,
-			'_':  19,
-			'+':  19,
-			'-':  19,
-			'*':  19,
-			'/':  19,
-			'>':  19,
-			'<':  19,
-			'=':  19,
-			'{':  19,
-			'(':  19,
-			')':  19,
-			';':  19,
-			'"':  19,
-			'.':  19,
-			'E':  19,
-			'e':  19,
-			':':  19,
-			',':  19,
-			'!':  19,
-			'?':  19,
-			'[':  19,
-			']':  19,
-			'\\': 19,
-			'}':  20,
+			{
+				from: 19,
+				to:   19,
+				reading: flatten([][]Symbol{
+					letters,
+					numbers,
+					{'\t', ' ', '_', '+', '-', '*', '/', '>', '<', '=', '{', '(', ')', ';', '"', '.', ':', ',', '!', '?', '[', ']', '\\'},
+				}),
+			},
+			{
+				from: 19,
+				to:   20,
+				reading: flatten([][]Symbol{
+					{'}'},
+				}),
+			},
 		},
+
 		21: {
-			'\t': 21,
-			'\n': 21,
-			' ':  21,
-			'L':  21,
-			'D':  21,
-			'_':  21,
-			'+':  21,
-			'-':  21,
-			'*':  21,
-			'/':  21,
-			'>':  21,
-			'<':  21,
-			'=':  21,
-			'{':  21,
-			'(':  21,
-			')':  21,
-			';':  21,
-			'.':  21,
-			'E':  21,
-			'e':  21,
-			'}':  21,
-			':':  21,
-			',':  21,
-			'!':  21,
-			'?':  21,
-			'[':  21,
-			']':  21,
-			'\\': 21,
-			'"':  22,
+			{
+				from: 21,
+				to:   21,
+				reading: flatten([][]Symbol{
+					letters,
+					numbers,
+					{'\t', ' ', '_', '+', '-', '*', '/', '>', '<', '=', '{', '}', '(', ')', ';', '.', ':', ',', '!', '?', '[', ']', '\\'},
+				}),
+			},
+			{
+				from: 21,
+				to:   22,
+				reading: flatten([][]Symbol{
+					{'"'},
+				}),
+			},
 		},
 	}
-	stateToTokenClassMap = map[int]TokenClass{
+	stateToTokenClassMap = map[State]TokenClass{
 		1:  IDENTIFIER,
 		2:  NUM,
 		4:  NUM,
@@ -164,26 +329,18 @@ var (
 	}
 )
 
-func containsByte(slice []byte, element byte) bool {
-	for _, a := range slice {
-		if a == element {
-			return true
-		}
-	}
-	return false
-}
-
 type Scanner struct {
 	file                 *os.File
 	lexemBuffer          []byte
 	currentLineFile      int
 	currentColumnFile    int
 	dft                  Dft
-	stateToTokenClassMap map[int]TokenClass
-	charsToIgnore        []byte
+	stateToTokenClassMap map[State]TokenClass
+	symbolsToIgnore      []Symbol
+	symbolTable          *SymbolTable
 }
 
-func NewScanner(file *os.File) *Scanner {
+func NewScanner(file *os.File, symbolTable *SymbolTable) *Scanner {
 	dft, err := NewDft(alphabet, states, 0, finalStates, transitionMap)
 	if err != nil {
 		log.Fatal("Failed to create DFT:", err)
@@ -196,14 +353,17 @@ func NewScanner(file *os.File) *Scanner {
 		currentColumnFile:    0,
 		dft:                  *dft,
 		stateToTokenClassMap: stateToTokenClassMap,
-		charsToIgnore:        []byte{'\n', ' ', '\t'},
+		symbolsToIgnore:      []Symbol{'\n', ' ', '\t'},
+		symbolTable:          symbolTable,
 	}
 }
 
-func (s *Scanner) getTokenClass(state int) TokenClass {
+func (s *Scanner) getTokenClass(state State) TokenClass {
 	return s.stateToTokenClassMap[state]
 }
 
+// Recognizes if a number is integer or real and
+// changes the dataType accordingly
 func (s *Scanner) updateDataType(token *Token) {
 	switch token.class {
 	case NUM:
@@ -223,26 +383,6 @@ func (s *Scanner) clearLexemBuffer() {
 	s.lexemBuffer = []byte{}
 }
 
-// Analyses an input symbol to check if it is in the Letter set,
-// Digit set, or neither.
-//
-// If the input symbol is in the Letter set, the letter 'L' is returned.
-// If the input symbol is in the Digit set, the letter 'D' is returned.
-// If the input symbol is not in the Letter set or Digit set,
-// then the symbol itself is returned.
-func (s *Scanner) recognizeSymbol(symbol byte) byte {
-	// Letter set
-	if (symbol >= 'a' && symbol <= 'z') || (symbol >= 'A' && symbol <= 'Z') {
-		return 'L'
-	}
-	// Digit set
-	if symbol >= '0' && symbol <= '9' {
-		return 'D'
-	}
-
-	return symbol
-}
-
 // Scan reads the Scanner file until finds a Token or an error.
 // If it finds a Token it returns the reconized token, otherwhise
 // just returns an error Token and shows to the user the error
@@ -253,7 +393,7 @@ func (s *Scanner) Scan() Token {
 	for {
 		n, err := s.file.Read(readBuffer)
 		currChar := readBuffer[0]
-		currSymbol := s.recognizeSymbol(currChar)
+		currSymbol := Symbol(currChar)
 
 		s.currentColumnFile += n
 
@@ -262,7 +402,7 @@ func (s *Scanner) Scan() Token {
 		}
 
 		if err == io.EOF && len(s.lexemBuffer) != 0 {
-			if containsByte(s.lexemBuffer, '{') && !containsByte(s.lexemBuffer, '}') {
+			if ContainsByte(s.lexemBuffer, '{') && !ContainsByte(s.lexemBuffer, '}') {
 				log.Printf("Erro na linha %d coluna %d, palavra %s não existe na linguagem\n", s.currentLineFile, s.currentColumnFile, fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
 				s.clearLexemBuffer()
 				s.dft.Reset()
@@ -278,12 +418,12 @@ func (s *Scanner) Scan() Token {
 			s.dft.Reset()
 
 			if token.class == IDENTIFIER {
-				return InsertSymbolTable(token.lexeme, token)
+				return s.symbolTable.Insert(token.lexeme, token)
 			}
 			return token
 		}
 
-		if !containsByte(alphabet, currSymbol) || !containsByte(s.lexemBuffer, '{') && currChar == '}' {
+		if !ContainsSymbol(alphabet, currSymbol) || !ContainsByte(s.lexemBuffer, '{') && currChar == '}' {
 			log.Printf("Erro na linha %d coluna %d, palavra %s não existe na linguagem\n", s.currentLineFile, s.currentColumnFile, fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
 			s.clearLexemBuffer()
 			s.dft.Reset()
@@ -313,14 +453,26 @@ func (s *Scanner) Scan() Token {
 			}
 
 			if token.class == IDENTIFIER {
-				return InsertSymbolTable(token.lexeme, token)
+				return s.symbolTable.Insert(token.lexeme, token)
 			}
 			return token
 		}
 
-		if !containsByte(s.charsToIgnore, currChar) {
+		if errors.Is(err, ErrorTransitionDoesNotExist) && !s.dft.IsFinalState() {
+			if currChar == ' ' || currChar == '\n' || currChar == '\t' {
+				continue
+			}
+
+			log.Printf("Padrão \"%s\" não existente na linguagem", fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
+			s.clearLexemBuffer()
+			s.dft.Reset()
+
+			return ERROR_TOKEN
+		}
+
+		if !ContainsSymbol(s.symbolsToIgnore, currSymbol) {
 			s.lexemBuffer = append(s.lexemBuffer, currChar)
-		} else if containsByte(s.lexemBuffer, '"') {
+		} else if ContainsByte(s.lexemBuffer, '"') {
 			s.lexemBuffer = append(s.lexemBuffer, currChar)
 		}
 	}

@@ -21,5 +21,6 @@ This is a compiler for mgol implemented in go for the final work of the compiler
 - [x] Check why the readme is a binary file
 - [x] Implement symbol table
 - [x] Implement symbol table tests
-- [ ] Return elements from the symbol table
+- [x] Return elements from the symbol table
 - [ ] Fix the rows and columns bug
+- [x] Fix bug where the transition does not exist and is not a final state
