@@ -1,12 +1,23 @@
 package lexer
 
 import (
+	"bytes"
 	"io"
 	"io/ioutil"
+	"log"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
+
+func captureOutput(f func()) string {
+	var buf bytes.Buffer
+	log.SetOutput(&buf)
+	f()
+	log.SetOutput(os.Stderr)
+	return buf.String()
+}
 
 func TestScanNumToken(t *testing.T) {
 	testCases := []struct {
@@ -501,6 +512,92 @@ func TestScanGeneralCases(t *testing.T) {
 			for _, expectedToken := range tc.expectedToken {
 				token := scanner.Scan()
 				require.Equal(t, expectedToken, token)
+			}
+		})
+	}
+}
+
+func TestStdoutErrorLog(t *testing.T) {
+	testCases := []struct {
+		name           string
+		preparedText   string
+		expectedOutput []string
+	}{
+		{
+			name:         "Character does not exits in the alphabet in one line",
+			preparedText: "abc %",
+			expectedOutput: []string{
+				"",
+				"Erro na linha 1 coluna 5, palavra % não existe na linguagem",
+			},
+		},
+		{
+			name:         "Character does not exits in the alphabet in one line inside a word",
+			preparedText: "abc%",
+			expectedOutput: []string{
+				"Erro na linha 1 coluna 4, palavra abc% não existe na linguagem",
+			},
+		},
+		{
+			name:         "Character does not exits in the alphabet in the second line",
+			preparedText: "A<-3;\nB %",
+			expectedOutput: []string{
+				"",
+				"",
+				"",
+				"",
+				"",
+				"Erro na linha 2 coluna 3, palavra % não existe na linguagem",
+			},
+		},
+		{
+			name:         "Character does not exits in the alphabet with N line breaks, first column",
+			preparedText: "\n\n\n$",
+			expectedOutput: []string{
+				"Erro na linha 4 coluna 1, palavra $ não existe na linguagem",
+			},
+		},
+		{
+			name:         "Character does not exits in the alphabet with N line breaks, Mth column",
+			preparedText: "A\nB\nC\nD<-E ; $",
+			expectedOutput: []string{
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"",
+				"Erro na linha 4 coluna 8, palavra $ não existe na linguagem",
+			},
+		},
+	}
+
+	symbolTable := GetSymbolTableInstance()
+
+	FillSymbolTable(symbolTable)
+	defer symbolTable.Cleanup()
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			file, err := ioutil.TempFile("", "scan-test")
+			require.NoError(t, err)
+			defer file.Close()
+
+			_, err = file.WriteString(tc.preparedText)
+			require.NoError(t, err)
+
+			file.Seek(0, io.SeekStart)
+
+			scanner := NewScanner(file, GetSymbolTableInstance())
+
+			for _, expectedOutput := range tc.expectedOutput {
+				output := captureOutput(func() { scanner.Scan() })
+				// Remove date, hour and line break
+				if output != "" {
+					output = output[20 : len(output)-1]
+				}
+				require.Equal(t, expectedOutput, output)
 			}
 		})
 	}
