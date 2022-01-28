@@ -528,14 +528,14 @@ func TestStdoutErrorLog(t *testing.T) {
 			preparedText: "abc %",
 			expectedOutput: []string{
 				"",
-				"Erro na linha 1 coluna 5, palavra % não existe na linguagem",
+				"erro na linha 1 coluna 5, palavra % inexistente na linguagem",
 			},
 		},
 		{
 			name:         "Character does not exits in the alphabet in one line inside a word",
 			preparedText: "abc%",
 			expectedOutput: []string{
-				"Erro na linha 1 coluna 4, palavra abc% não existe na linguagem",
+				"erro na linha 1 coluna 4, palavra abc% inexistente na linguagem",
 			},
 		},
 		{
@@ -547,14 +547,14 @@ func TestStdoutErrorLog(t *testing.T) {
 				"",
 				"",
 				"",
-				"Erro na linha 2 coluna 3, palavra % não existe na linguagem",
+				"erro na linha 2 coluna 3, palavra % inexistente na linguagem",
 			},
 		},
 		{
 			name:         "Character does not exits in the alphabet with N line breaks, first column",
 			preparedText: "\n\n\n$",
 			expectedOutput: []string{
-				"Erro na linha 4 coluna 1, palavra $ não existe na linguagem",
+				"erro na linha 4 coluna 1, palavra $ inexistente na linguagem",
 			},
 		},
 		{
@@ -568,7 +568,7 @@ func TestStdoutErrorLog(t *testing.T) {
 				"",
 				"",
 				"",
-				"Erro na linha 4 coluna 8, palavra $ não existe na linguagem",
+				"erro na linha 4 coluna 8, palavra $ inexistente na linguagem",
 			},
 		},
 	}
