@@ -571,6 +571,38 @@ func TestStdoutErrorLog(t *testing.T) {
 				"erro na linha 4 coluna 8, palavra $ inexistente na linguagem",
 			},
 		},
+		{
+			name:         "Malformated number",
+			preparedText: "1.e3",
+			expectedOutput: []string{
+				"erro na linha 1 coluna 3, número 1.e inválido",
+				"",
+			},
+		},
+		{
+			name:         "Malformated number with double points",
+			preparedText: "1..0",
+			expectedOutput: []string{
+				"erro na linha 1 coluna 3, número 1.. inválido",
+				"",
+			},
+		},
+		{
+			name:         "Malformated literal",
+			preparedText: `"this is a malformated literal`,
+			expectedOutput: []string{
+				"erro na linha 1 coluna 30, literal \"this is a malformated literal inválido",
+				"",
+			},
+		},
+		{
+			name:         "Malformated comment",
+			preparedText: "{this is malformated commment",
+			expectedOutput: []string{
+				"erro na linha 1 coluna 29, comentário {this is malformated commment inválido",
+				"",
+			},
+		},
 	}
 
 	symbolTable := GetSymbolTableInstance()

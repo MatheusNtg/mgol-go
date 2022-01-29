@@ -409,6 +409,14 @@ func (s *Scanner) Scan() Token {
 				return ERROR_TOKEN
 			}
 
+			numberOfQuotation := strings.Count(string(s.lexemBuffer), "\"")
+			if numberOfQuotation == 1 {
+				errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer))
+				s.clearLexemBuffer()
+				s.dft.Reset()
+				return ERROR_TOKEN
+			}
+
 			tokenClass := s.getTokenClass(s.dft.GetCurrentState())
 			lexem := s.lexemBuffer
 			token := NewToken(tokenClass, string(lexem), NULL)
@@ -472,7 +480,7 @@ func (s *Scanner) Scan() Token {
 
 		if !ContainsSymbol(s.symbolsToIgnore, currSymbol) {
 			s.lexemBuffer = append(s.lexemBuffer, currChar)
-		} else if ContainsByte(s.lexemBuffer, '"') {
+		} else if ContainsByte(s.lexemBuffer, '"') || ContainsByte(s.lexemBuffer, '{') {
 			s.lexemBuffer = append(s.lexemBuffer, currChar)
 		}
 	}
