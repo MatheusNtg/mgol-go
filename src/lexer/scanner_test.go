@@ -528,14 +528,14 @@ func TestStdoutErrorLog(t *testing.T) {
 			preparedText: "abc %",
 			expectedOutput: []string{
 				"",
-				"Erro na linha 1 coluna 5, palavra % não existe na linguagem",
+				"erro na linha 1 coluna 5, palavra % inexistente na linguagem",
 			},
 		},
 		{
 			name:         "Character does not exits in the alphabet in one line inside a word",
 			preparedText: "abc%",
 			expectedOutput: []string{
-				"Erro na linha 1 coluna 4, palavra abc% não existe na linguagem",
+				"erro na linha 1 coluna 4, palavra abc% inexistente na linguagem",
 			},
 		},
 		{
@@ -547,14 +547,14 @@ func TestStdoutErrorLog(t *testing.T) {
 				"",
 				"",
 				"",
-				"Erro na linha 2 coluna 3, palavra % não existe na linguagem",
+				"erro na linha 2 coluna 3, palavra % inexistente na linguagem",
 			},
 		},
 		{
 			name:         "Character does not exits in the alphabet with N line breaks, first column",
 			preparedText: "\n\n\n$",
 			expectedOutput: []string{
-				"Erro na linha 4 coluna 1, palavra $ não existe na linguagem",
+				"erro na linha 4 coluna 1, palavra $ inexistente na linguagem",
 			},
 		},
 		{
@@ -568,7 +568,39 @@ func TestStdoutErrorLog(t *testing.T) {
 				"",
 				"",
 				"",
-				"Erro na linha 4 coluna 8, palavra $ não existe na linguagem",
+				"erro na linha 4 coluna 8, palavra $ inexistente na linguagem",
+			},
+		},
+		{
+			name:         "Malformated number",
+			preparedText: "1.e3",
+			expectedOutput: []string{
+				"erro na linha 1 coluna 3, número 1.e inválido",
+				"",
+			},
+		},
+		{
+			name:         "Malformated number with double points",
+			preparedText: "1..0",
+			expectedOutput: []string{
+				"erro na linha 1 coluna 3, número 1.. inválido",
+				"",
+			},
+		},
+		{
+			name:         "Malformated literal",
+			preparedText: `"this is a malformated literal`,
+			expectedOutput: []string{
+				"erro na linha 1 coluna 30, literal \"this is a malformated literal inválido",
+				"",
+			},
+		},
+		{
+			name:         "Malformated comment",
+			preparedText: "{this is malformated commment",
+			expectedOutput: []string{
+				"erro na linha 1 coluna 29, comentário {this is malformated commment inválido",
+				"",
 			},
 		},
 	}

@@ -2,9 +2,9 @@ package lexer
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"log"
+	errorhandling "mgol-go/src/error_handling"
 	"os"
 	"strings"
 )
@@ -403,7 +403,15 @@ func (s *Scanner) Scan() Token {
 
 		if err == io.EOF && len(s.lexemBuffer) != 0 {
 			if ContainsByte(s.lexemBuffer, '{') && !ContainsByte(s.lexemBuffer, '}') {
-				log.Printf("Erro na linha %d coluna %d, palavra %s não existe na linguagem\n", s.currentLineFile, s.currentColumnFile, fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
+				errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer))
+				s.clearLexemBuffer()
+				s.dft.Reset()
+				return ERROR_TOKEN
+			}
+
+			numberOfQuotation := strings.Count(string(s.lexemBuffer), "\"")
+			if numberOfQuotation == 1 {
+				errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer))
 				s.clearLexemBuffer()
 				s.dft.Reset()
 				return ERROR_TOKEN
@@ -424,7 +432,7 @@ func (s *Scanner) Scan() Token {
 		}
 
 		if !ContainsSymbol(alphabet, currSymbol) || !ContainsByte(s.lexemBuffer, '{') && currChar == '}' {
-			log.Printf("Erro na linha %d coluna %d, palavra %s não existe na linguagem\n", s.currentLineFile, s.currentColumnFile, fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
+			errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer)+string(currChar))
 			s.clearLexemBuffer()
 			s.dft.Reset()
 			return ERROR_TOKEN
@@ -463,7 +471,7 @@ func (s *Scanner) Scan() Token {
 				continue
 			}
 
-			log.Printf("Padrão \"%s\" não existente na linguagem", fmt.Sprintf("%s%s", string(s.lexemBuffer), string(currChar)))
+			errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer)+string(currChar))
 			s.clearLexemBuffer()
 			s.dft.Reset()
 
@@ -472,7 +480,7 @@ func (s *Scanner) Scan() Token {
 
 		if !ContainsSymbol(s.symbolsToIgnore, currSymbol) {
 			s.lexemBuffer = append(s.lexemBuffer, currChar)
-		} else if ContainsByte(s.lexemBuffer, '"') {
+		} else if ContainsByte(s.lexemBuffer, '"') || ContainsByte(s.lexemBuffer, '{') {
 			s.lexemBuffer = append(s.lexemBuffer, currChar)
 		}
 	}
