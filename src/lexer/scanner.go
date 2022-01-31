@@ -61,8 +61,8 @@ var (
 			'?', '[', ']', '\\',
 		},
 	})
-	states        = []State{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22}
-	finalStates   = []State{1, 2, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 22}
+	states        = []State{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25}
+	finalStates   = []State{1, 2, 4, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20, 22, 25}
 	transitionMap = map[State][]Transition{
 		0: {
 			{
@@ -200,7 +200,7 @@ var (
 			},
 			{
 				from: 4,
-				to:   5,
+				to:   23,
 				reading: flatten([][]Symbol{
 					{'e', 'E'},
 				}),
@@ -308,6 +308,43 @@ var (
 				}),
 			},
 		},
+
+		23: {
+			{
+				from: 23,
+				to:   24,
+				reading: flatten([][]Symbol{
+					{'+', '-'},
+				}),
+			},
+			{
+				from: 23,
+				to:   25,
+				reading: flatten([][]Symbol{
+					numbers,
+				}),
+			},
+		},
+
+		24: {
+			{
+				from: 24,
+				to:   25,
+				reading: flatten([][]Symbol{
+					numbers,
+				}),
+			},
+		},
+
+		25: {
+			{
+				from: 25,
+				to:   25,
+				reading: flatten([][]Symbol{
+					numbers,
+				}),
+			},
+		},
 	}
 	stateToTokenClassMap = map[State]TokenClass{
 		1:  IDENTIFIER,
@@ -326,6 +363,13 @@ var (
 		17: SEMICOLON,
 		20: COMMENT,
 		22: LITERAL_CONST,
+		25: NUM,
+	}
+	numericTypes = map[State]DataType{
+		2:  INTEGER,
+		4:  REAL,
+		7:  INTEGER,
+		25: REAL,
 	}
 )
 
@@ -367,11 +411,7 @@ func (s *Scanner) getTokenClass(state State) TokenClass {
 func (s *Scanner) updateDataType(token *Token) {
 	switch token.class {
 	case NUM:
-		if strings.Contains(token.lexeme, ".") {
-			token.dataType = REAL
-		} else {
-			token.dataType = INTEGER
-		}
+		token.dataType = numericTypes[s.dft.currentState]
 	case LITERAL_CONST:
 		token.dataType = LITERAL
 	default:
