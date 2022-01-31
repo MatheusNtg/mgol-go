@@ -511,8 +511,11 @@ func (s *Scanner) Scan() Token {
 				continue
 			}
 
-			errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer)+string(currChar))
+			errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer))
 			s.clearLexemBuffer()
+			if s.dft.currentState != s.dft.initialState {
+				s.file.Seek(-1, os.SEEK_CUR)
+			}
 			s.dft.Reset()
 
 			return ERROR_TOKEN
