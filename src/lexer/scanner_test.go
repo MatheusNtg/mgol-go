@@ -120,6 +120,7 @@ func TestScanNumToken(t *testing.T) {
 			preparedText: "1.E+0",
 			expectedTokens: []Token{
 				ERROR_TOKEN,
+				NewToken(IDENTIFIER, "E", NULL),
 				NewToken(ARIT_OP, "+", NULL),
 				NewToken(NUM, "0", INTEGER),
 			},
@@ -129,6 +130,7 @@ func TestScanNumToken(t *testing.T) {
 			preparedText: "1.e+0",
 			expectedTokens: []Token{
 				ERROR_TOKEN,
+				NewToken(IDENTIFIER, "e", NULL),
 				NewToken(ARIT_OP, "+", NULL),
 				NewToken(NUM, "0", INTEGER),
 			},
@@ -138,6 +140,7 @@ func TestScanNumToken(t *testing.T) {
 			preparedText: "1.E-0",
 			expectedTokens: []Token{
 				ERROR_TOKEN,
+				NewToken(IDENTIFIER, "E", NULL),
 				NewToken(ARIT_OP, "-", NULL),
 				NewToken(NUM, "0", INTEGER),
 			},
@@ -147,6 +150,7 @@ func TestScanNumToken(t *testing.T) {
 			preparedText: "1.e-0",
 			expectedTokens: []Token{
 				ERROR_TOKEN,
+				NewToken(IDENTIFIER, "e", NULL),
 				NewToken(ARIT_OP, "-", NULL),
 				NewToken(NUM, "0", INTEGER),
 			},
@@ -575,7 +579,7 @@ func TestStdoutErrorLog(t *testing.T) {
 			name:         "Malformated number",
 			preparedText: "1.e3",
 			expectedOutput: []string{
-				"erro na linha 1 coluna 3, número 1.e inválido",
+				"erro na linha 1 coluna 3, número 1. inválido",
 				"",
 			},
 		},
@@ -583,8 +587,8 @@ func TestStdoutErrorLog(t *testing.T) {
 			name:         "Malformated number with double points",
 			preparedText: "1..0",
 			expectedOutput: []string{
-				"erro na linha 1 coluna 3, número 1.. inválido",
-				"",
+				"erro na linha 1 coluna 3, número 1. inválido",
+				"erro na linha 1 coluna 4, palavra . inexistente na linguagem",
 			},
 		},
 		{
@@ -601,6 +605,23 @@ func TestStdoutErrorLog(t *testing.T) {
 			expectedOutput: []string{
 				"erro na linha 1 coluna 29, comentário {this is malformated commment inválido",
 				"",
+			},
+		},
+		{
+			name:         "State 0 with no transition and lexembuffer empty",
+			preparedText: "!!",
+			expectedOutput: []string{
+				"erro na linha 1 coluna 1, palavra ! inexistente na linguagem",
+				"erro na linha 1 coluna 2, palavra ! inexistente na linguagem",
+			},
+		},
+		{
+			name:         "State 0 with no transition and lexembuffer empty after reading something",
+			preparedText: "123!!",
+			expectedOutput: []string{
+				"",
+				"erro na linha 1 coluna 4, palavra ! inexistente na linguagem",
+				"erro na linha 1 coluna 5, palavra ! inexistente na linguagem",
 			},
 		},
 	}
