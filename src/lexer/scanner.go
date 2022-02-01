@@ -513,9 +513,7 @@ func (s *Scanner) Scan() Token {
 
 			if len(string(s.lexemBuffer)) == 0 {
 				errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(currChar))
-			}
-
-			if len(string(s.lexemBuffer)) > 0 {
+			} else {
 				errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer))
 			}
 
