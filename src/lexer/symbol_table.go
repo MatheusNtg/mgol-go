@@ -2,6 +2,8 @@ package lexer
 
 import (
 	"fmt"
+
+	"github.com/pterm/pterm"
 )
 
 // Posible errors
@@ -61,7 +63,9 @@ func (s *SymbolTable) Cleanup() {
 }
 
 func (s *SymbolTable) Print() {
+	data := pterm.TableData{{"Chave", "Valor"}}
 	for k, v := range s.table {
-		fmt.Printf("Chave: %v, Valor: %v\n", k, v)
+		data = append(data, []string{k, v.String()})
 	}
+	pterm.DefaultTable.WithHasHeader().WithData(data).Render()
 }
