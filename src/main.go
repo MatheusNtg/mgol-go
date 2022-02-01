@@ -7,6 +7,8 @@ import (
 	"os"
 )
 
+var separator = "=================="
+
 func main() {
 	filePath := os.Args[1]
 
@@ -29,4 +31,6 @@ func main() {
 			break
 		}
 	}
+	fmt.Printf(separator + "\nTabela de símbolos\n" + separator + "\n")
+	symbolTable.Print()
 }
