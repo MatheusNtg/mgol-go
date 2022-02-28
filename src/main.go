@@ -32,6 +32,7 @@ func main() {
 	// fmt.Printf(separator + "\nTabela de símbolos\n" + separator + "\n")
 	// symbolTable.Print()
 
-	fmt.Println(parser.GetRulesMap("./parser/grammar.json"))
+	ar := parser.NewActionReader("/home/matheus/github/mgol-go/src/parser/tables/action.tsv")
+	fmt.Println(ar.GetAction(5, "$"))
 
 }
