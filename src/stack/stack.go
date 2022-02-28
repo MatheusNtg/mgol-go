@@ -7,7 +7,7 @@ var (
 	ErrEmptyStack          = fmt.Errorf("empty stack")
 )
 
-type stack struct {
+type Stack struct {
 	data     []interface{}
 	capacity int
 	length   int
@@ -15,8 +15,8 @@ type stack struct {
 
 //NewStack returns a new empty stack with
 //maximum capacity defined by capacity
-func NewStack(capacity int) *stack {
-	return &stack{
+func NewStack(capacity int) *Stack {
+	return &Stack{
 		data:     nil,
 		capacity: capacity,
 		length:   0,
@@ -29,7 +29,7 @@ func NewStack(capacity int) *stack {
 //on the stack, otherwise it will return an
 //error and no element will be pushed on the
 //stack
-func (s *stack) Push(element interface{}) error {
+func (s *Stack) Push(element interface{}) error {
 	if s.length >= s.capacity {
 		return ErrNotEnoughStackSpace
 	}
@@ -42,7 +42,7 @@ func (s *stack) Push(element interface{}) error {
 //Pop returns and remove the top element of the stack
 //This is only possible if the stack is not empty,
 //otherwise it will return an error
-func (s *stack) Pop() (interface{}, error) {
+func (s *Stack) Pop() (interface{}, error) {
 	if s.length == 0 {
 		return nil, ErrEmptyStack
 	}
@@ -54,18 +54,18 @@ func (s *stack) Pop() (interface{}, error) {
 
 //Returns the length of stack this represents
 //how many elements are present on the stack
-func (s *stack) GetLength() int {
+func (s *Stack) GetLength() int {
 	return s.length
 }
 
 //Returns the capacity of the stack, this
 //represents the maximum amount of elements
 //that the instance of the stack can hold
-func (s *stack) GetCapacity() int {
+func (s *Stack) GetCapacity() int {
 	return s.capacity
 }
 
 //Returns a string representation of the stack
-func (s *stack) String() string {
+func (s *Stack) String() string {
 	return fmt.Sprintf("{\nData:%v,\nCapacity:%v,\nLength:%v,\n}", s.data, s.capacity, s.length)
 }
