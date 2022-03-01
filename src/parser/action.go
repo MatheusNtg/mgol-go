@@ -54,6 +54,15 @@ func (a *ActionReader) GetAction(state lexer.State, token lexer.Token) (Action, 
 		lexem = token.GetLexem()
 	}
 
+	switch lexem {
+	case ";":
+		lexem = "pt_v"
+	case "(":
+		lexem = "ab_p"
+	case ")":
+		lexem = "fc_p"
+	}
+
 	//We need to sum to sum one to access line n because we want to
 	//eliminate the header itself
 	value := []byte(a.records[state+1][a.indexes[lexem]])

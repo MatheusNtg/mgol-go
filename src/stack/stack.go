@@ -52,6 +52,17 @@ func (s *Stack) Pop() (interface{}, error) {
 	return element, nil
 }
 
+//Get returns the top element of the stack
+//This is only possible if the stack is not empty,
+//otherwise it will return an error
+func (s *Stack) Get() (interface{}, error) {
+	if s.length == 0 {
+		return nil, ErrEmptyStack
+	}
+	element := s.data[s.length-1]
+	return element, nil
+}
+
 //Returns the length of stack this represents
 //how many elements are present on the stack
 func (s *Stack) GetLength() int {

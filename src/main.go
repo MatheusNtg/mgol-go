@@ -1,38 +1,40 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"mgol-go/src/lexer"
 	"mgol-go/src/parser"
+	"mgol-go/src/stack"
+	"os"
 )
 
 var separator = "=================="
 
+const (
+	stackCapacity   = 100000
+	grammarPath     = "./src/parser/grammar.json"
+	actionTablePath = "./src/parser/tables/action.tsv"
+	gotoTablePath   = "./src/parser/tables/goto.tsv"
+)
+
 func main() {
-	// filePath := os.Args[1]
+	filePath := os.Args[1]
 
-	// file, err := os.Open(filePath)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer file.Close()
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
 
-	// symbolTable := lexer.GetSymbolTableInstance()
+	symbolTable := lexer.GetSymbolTableInstance()
 
-	// lexer.FillSymbolTable(symbolTable)
-	// defer symbolTable.Cleanup()
+	lexer.FillSymbolTable(symbolTable)
+	defer symbolTable.Cleanup()
 
-	// scanner := lexer.NewScanner(file, symbolTable)
-	// for {
-	// 	token := scanner.Scan()
-	// 	fmt.Println(token)
-	// 	if token == lexer.EOF_TOKEN {
-	// 		break
-	// 	}
-	// }
-	// fmt.Printf(separator + "\nTabela de símbolos\n" + separator + "\n")
-	// symbolTable.Print()
+	scanner := lexer.NewScanner(file, symbolTable)
+	stack := stack.NewStack(stackCapacity)
+	rules := parser.GetRulesMap(grammarPath)
+	parser := parser.NewParser(scanner, stack, rules, actionTablePath, gotoTablePath)
 
-	ar := parser.NewActionReader("/home/matheus/github/mgol-go/src/parser/tables/action.tsv")
-	fmt.Println(ar.GetAction(5, "$"))
-
+	parser.Parse()
 }

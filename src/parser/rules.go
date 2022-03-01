@@ -46,3 +46,7 @@ func GetRulesMap(path string) *RulesMap {
 		return rulesMapInstance
 	}
 }
+
+func (r *RulesMap) GetRule(ruleNumber int) Rule {
+	return (*r)[ruleNumber]
+}
