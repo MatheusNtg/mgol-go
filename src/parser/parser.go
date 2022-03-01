@@ -57,12 +57,10 @@ func (p *Parser) Parse() {
 			p.stack.Push(gotoOpr)
 			log.Print(rule.Left, "->", rule.Right)
 		case ACCEPT:
-			accepted = true
+			goto end_for
 		case NONE:
 			log.Println("Deu pau")
 		}
-		if accepted {
-			break
-		}
 	}
+end_for:
 }
