@@ -30,7 +30,6 @@ func (p *Parser) Parse() {
 
 	actionReader := NewActionReader(p.actionTablePath)
 	gotoReader := NewGotoReader(p.gotoTablePath)
-	accepted := false
 	for {
 		topStack, err := p.stack.Get()
 		if err != nil {
