@@ -30,7 +30,7 @@ func (p *Parser) Parse() {
 
 	actionReader := NewActionReader(p.actionTablePath)
 	gotoReader := NewGotoReader(p.gotoTablePath)
-
+	accepted := false
 	for {
 		topStack, err := p.stack.Get()
 		if err != nil {
@@ -48,7 +48,6 @@ func (p *Parser) Parse() {
 			for range rule.Right {
 				p.stack.Pop()
 			}
-			p.stack.Push(opr)
 			currentTopElement, err := p.stack.Get()
 			state = lexer.State(currentTopElement.(int))
 			if err != nil {
@@ -58,10 +57,12 @@ func (p *Parser) Parse() {
 			p.stack.Push(gotoOpr)
 			log.Print(rule.Left, "->", rule.Right)
 		case ACCEPT:
-			goto for_end
+			accepted = true
 		case NONE:
 			log.Println("Deu pau")
 		}
+		if accepted {
+			break
+		}
 	}
-for_end:
 }
