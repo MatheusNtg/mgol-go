@@ -47,9 +47,16 @@ func NewActionReader(path string) *ActionReader {
 }
 
 func (a *ActionReader) GetAction(state lexer.State, token lexer.Token) (Action, int) {
+	var lexem string
+	if token == lexer.EOF_TOKEN {
+		lexem = "$"
+	} else {
+		lexem = token.GetLexem()
+	}
+
 	//We need to sum to sum one to access line n because we want to
 	//eliminate the header itself
-	value := []byte(a.records[state+1][a.indexes[token.GetLexem()]])
+	value := []byte(a.records[state+1][a.indexes[lexem]])
 
 	if len(value) == 0 {
 		return NONE, 0
