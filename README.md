@@ -15,6 +15,6 @@ This is a compiler for mgol implemented in go for the final work of the compiler
 
 ## TODO
 
-- [] Implement error recovery
-- [] Ignore comment tokens
-- [] Add more tests to parser
+- [ ] Implement error recovery
+- [x] Ignore comment and lexical error tokens
+- [ ] Add more tests to parser

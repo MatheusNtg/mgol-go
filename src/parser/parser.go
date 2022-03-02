@@ -6,6 +6,13 @@ import (
 	"mgol-go/src/stack"
 )
 
+var (
+	tokensToIgnore = []lexer.Token{
+		lexer.ERROR_TOKEN,
+		lexer.COMMENT_TOKEN,
+	}
+)
+
 type Parser struct {
 	scanner         *lexer.Scanner
 	stack           *stack.Stack
@@ -24,8 +31,22 @@ func NewParser(scanner *lexer.Scanner, stack *stack.Stack, rules *RulesMap, acti
 	}
 }
 
+// isInTokensToIgnore return whether a token
+// t is in the list of tokens to ignore or not
+func isInTokensToIgnore(t lexer.Token) bool {
+	for _, token := range tokensToIgnore {
+		if t == token {
+			return true
+		}
+	}
+	return false
+}
+
 func (p *Parser) Parse() {
 	token := p.scanner.Scan()
+	for isInTokensToIgnore(token) {
+		token = p.scanner.Scan()
+	}
 	p.stack.Push(0)
 
 	actionReader := NewActionReader(p.actionTablePath)
@@ -42,6 +63,9 @@ func (p *Parser) Parse() {
 		case SHIFT:
 			p.stack.Push(opr)
 			token = p.scanner.Scan()
+			for isInTokensToIgnore(token) {
+				token = p.scanner.Scan()
+			}
 		case REDUCE:
 			rule := p.rules.GetRule(opr)
 			for range rule.Right {
