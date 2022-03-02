@@ -82,7 +82,11 @@ func (p *Parser) Parse() {
 		case ACCEPT:
 			goto end_for
 		case NONE:
-			log.Println("Deu pau")
+			recoveryStatus := panicMode(p, token)
+
+			if recoveryStatus == recoveryFail {
+				goto end_for
+			}
 		}
 	}
 end_for:

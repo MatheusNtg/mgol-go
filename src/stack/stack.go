@@ -80,3 +80,13 @@ func (s *Stack) GetCapacity() int {
 func (s *Stack) String() string {
 	return fmt.Sprintf("{\nData:%v,\nCapacity:%v,\nLength:%v,\n}", s.data, s.capacity, s.length)
 }
+
+func (s *Stack) Clone() *Stack {
+	s_copy := NewStack(s.capacity)
+
+	for _, element := range s.data {
+		s_copy.Push(element)
+	}
+
+	return s_copy
+}
