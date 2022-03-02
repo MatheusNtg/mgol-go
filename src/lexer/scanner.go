@@ -423,6 +423,21 @@ func (s *Scanner) clearLexemBuffer() {
 	s.lexemBuffer = []byte{}
 }
 
+// reset clears the lexem buffer
+// and resets the head of the dft
+func (s *Scanner) reset() {
+	s.clearLexemBuffer()
+	s.dft.Reset()
+}
+
+// resetAndRewind does the same as
+// reset but rewind the head of the
+// file as well
+func (s *Scanner) resetAndRewind() {
+	s.reset()
+	s.file.Seek(-1, os.SEEK_CUR)
+}
+
 // Scan reads the Scanner file until finds a Token or an error.
 // If it finds a Token it returns the reconized token, otherwhise
 // just returns an error Token and shows to the user the error
@@ -444,26 +459,27 @@ func (s *Scanner) Scan() Token {
 		if err == io.EOF && len(s.lexemBuffer) != 0 {
 			if ContainsByte(s.lexemBuffer, '{') && !ContainsByte(s.lexemBuffer, '}') {
 				errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer))
-				s.clearLexemBuffer()
-				s.dft.Reset()
+				s.reset()
 				return ERROR_TOKEN
 			}
 
 			numberOfQuotation := strings.Count(string(s.lexemBuffer), "\"")
 			if numberOfQuotation == 1 {
 				errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer))
-				s.clearLexemBuffer()
-				s.dft.Reset()
+				s.reset()
 				return ERROR_TOKEN
 			}
 
 			tokenClass := s.getTokenClass(s.dft.GetCurrentState())
+			if tokenClass == COMMENT {
+				s.reset()
+				return COMMENT_TOKEN
+			}
 			lexem := s.lexemBuffer
 			token := NewToken(tokenClass, string(lexem), NULL)
 			s.updateDataType(&token)
 
-			s.clearLexemBuffer()
-			s.dft.Reset()
+			s.reset()
 
 			if token.class == IDENTIFIER {
 				return s.symbolTable.Insert(token.lexeme, token)
@@ -473,8 +489,7 @@ func (s *Scanner) Scan() Token {
 
 		if !ContainsSymbol(alphabet, currSymbol) || !ContainsByte(s.lexemBuffer, '{') && currChar == '}' {
 			errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer)+string(currChar))
-			s.clearLexemBuffer()
-			s.dft.Reset()
+			s.reset()
 			return ERROR_TOKEN
 		}
 
@@ -487,13 +502,15 @@ func (s *Scanner) Scan() Token {
 
 		if errors.Is(err, ErrorTransitionDoesNotExist) && s.dft.IsFinalState() {
 			tokenClass := s.getTokenClass(s.dft.GetCurrentState())
+			if tokenClass == COMMENT {
+				s.resetAndRewind()
+				return COMMENT_TOKEN
+			}
 			lexem := s.lexemBuffer
 			token := NewToken(tokenClass, string(lexem), NULL)
 			s.updateDataType(&token)
 
-			s.clearLexemBuffer()
-			s.dft.Reset()
-			s.file.Seek(-1, os.SEEK_CUR)
+			s.resetAndRewind()
 
 			s.currentColumnFile -= n
 			if currChar == '\n' {

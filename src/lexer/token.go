@@ -71,6 +71,11 @@ var (
 		lexeme:   "",
 		dataType: NULL,
 	}
+	COMMENT_TOKEN = Token{
+		class:    COMMENT,
+		lexeme:   "",
+		dataType: NULL,
+	}
 )
 
 //Language Reserved Tokens

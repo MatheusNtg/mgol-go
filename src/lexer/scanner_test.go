@@ -240,7 +240,7 @@ func TestScanCommentToken(t *testing.T) {
 			name:         "Valid comment with N open brackets",
 			preparedText: "{{{ab}",
 			expectedToken: []Token{
-				NewToken(COMMENT, "{{{ab}", NULL),
+				COMMENT_TOKEN,
 				EOF_TOKEN,
 			},
 		},
@@ -248,7 +248,7 @@ func TestScanCommentToken(t *testing.T) {
 			name:         "Close comment twice with characters in between",
 			preparedText: "{ab}ab}",
 			expectedToken: []Token{
-				NewToken(COMMENT, "{ab}", NULL),
+				COMMENT_TOKEN,
 				ERROR_TOKEN,
 				EOF_TOKEN,
 			},
@@ -257,7 +257,7 @@ func TestScanCommentToken(t *testing.T) {
 			name:         "Close comment twice",
 			preparedText: "{{abab}}",
 			expectedToken: []Token{
-				NewToken(COMMENT, "{{abab}", NULL),
+				COMMENT_TOKEN,
 				ERROR_TOKEN,
 				EOF_TOKEN,
 			},
