@@ -15,35 +15,35 @@ func TestGetAction(t *testing.T) {
 	testCases := []struct {
 		name            string
 		state           int
-		lexem           string
+		tokenClass      lexer.TokenClass
 		expectedAction  Action
 		expectedOperand int
 	}{
 		{
 			name:            "Getting accept",
 			state:           1,
-			lexem:           "$",
+			tokenClass:      lexer.EOF,
 			expectedAction:  ACCEPT,
 			expectedOperand: 0,
 		},
 		{
 			name:            "Get shift",
 			state:           3,
-			lexem:           "leia",
+			tokenClass:      "leia",
 			expectedAction:  SHIFT,
 			expectedOperand: 11,
 		},
 		{
 			name:            "Get reduce",
 			state:           23,
-			lexem:           "id",
+			tokenClass:      lexer.IDENTIFIER,
 			expectedAction:  REDUCE,
 			expectedOperand: 8,
 		},
 		{
 			name:            "Get none",
 			state:           3,
-			lexem:           "varinicio",
+			tokenClass:      "varinicio",
 			expectedAction:  NONE,
 			expectedOperand: 0,
 		},
@@ -54,7 +54,7 @@ func TestGetAction(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			r := require.New(t)
-			action, opr := action.GetAction(lexer.State(tc.state), lexer.NewToken(lexer.NUM, tc.lexem, lexer.NULL))
+			action, opr := action.GetAction(lexer.State(tc.state), lexer.NewToken(tc.tokenClass, "", lexer.NULL))
 			r.Equal(tc.expectedAction, action)
 			r.Equal(tc.expectedOperand, opr)
 		})
