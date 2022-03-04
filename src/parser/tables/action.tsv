@@ -1,0 +1,76 @@
+estado	inicio	varinicio	varfim	pt_v	id	inteiro	real	literal	leia	escreva	lit	num	rcb	opm	se	ab_p	fc_p	entao	opr	fimse	repita	fimrepita	fim	$
+0	s2																							
+1																								acc
+2		s4																						
+3					s13				s11	s12					s16						s17		s10	
+4			s20			s22	s23	s24																
+5																								r1
+6					s13				s11	s12					s16						s17		s10	
+7					s13				s11	s12					s16						s17		s10	
+8					s13				s11	s12					s16						s17		s10	
+9					s13				s11	s12					s16						s17		s10	
+10																								r37
+11					s29																			
+12					s33						s31	s32												
+13													s34											
+14					s13				s11	s12					s16					s39				
+15					s13				s11	s12					s16							s44		
+16																s45								
+17																s46								
+18					r2				r2	r2					r2						r2		r2	
+19			s20			s22	s23	s24																
+20				s48																				
+21					s50																			
+22					r7																			
+23					r8																			
+24					r9																			
+25																								r10
+26																								r16
+27																								r22
+28																								r30
+29				s51																				
+30				s52																				
+31				r13																				
+32				r14																				
+33				r15																				
+34					s55							s56												
+35					r23				r23	r23					r23					r23	r23	r23	r23	
+36					s13				s11	s12					s16					s39				
+37					s13				s11	s12					s16					s39				
+38					s13				s11	s12					s16					s39				
+39					r29				r29	r29					r29					r29	r29	r29	r29	
+40					r31				r31	r31					r31						r31		r31	
+41					s13				s11	s12					s16							s44		
+42					s13				s11	s12					s16							s44		
+43					s13				s11	s12					s16							s44		
+44					r36				r36	r36					r36						r36		r36	
+45					s55							s56												
+46					s55							s56												
+47					r3				r3	r3					r3						r3		r3	
+48					r4				r4	r4					r4						r4		r4	
+49				s66																				
+50				r6																				
+51					r11				r11	r11					r11					r11	r11	r11	r11	
+52					r12				r12	r12					r12					r12	r12	r12	r12	
+53				s67																				
+54				r19										s68										
+55				r20										r20			r20		r20					
+56				r21										r21			r21		r21					
+57					r26				r26	r26					r26					r26	r26	r26	r26	
+58					r27				r27	r27					r27					r27	r27	r27	r27	
+59					r28				r28	r28					r28					r28	r28	r28	r28	
+60					r33				r33	r33					r33						r33		r33	
+61					r34				r34	r34					r34						r34		r34	
+62					r35				r35	r35					r35						r35		r35	
+63																	s69							
+64																			s70					
+65																	s71							
+66			r5			r5	r5	r5																
+67					r17				r17	r17					r17					r17	r17	r17	r17	
+68					s55							s56												
+69																		s73						
+70					s55							s56												
+71					r32				r32	r32					r32							r32		
+72				r18																				
+73					r24				r24	r24					r24					r24				
+74																	r25							

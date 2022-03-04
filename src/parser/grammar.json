@@ -1,0 +1,192 @@
+[
+	{
+		"rule_number":0,
+		"left": "P'",
+		"right": ["P"]
+	},
+	{
+		"rule_number": 1,
+		"left":"P",
+		"right":["inicio", "V", "A"]
+	},
+	{
+		"rule_number": 2,
+		"left":"V",
+		"right":["varinicio", "LV"]
+	},
+	{
+		"rule_number": 3,
+		"left":"LV",
+		"right":["D", "LV"]
+	},
+	{
+		"rule_number": 4,
+		"left":"LV",
+		"right":["varfim", "pt_v"]
+	},
+	{
+		"rule_number": 5,
+		"left":"D",
+		"right":["TIPO", "L", "pt_v"]
+	},
+	{
+		"rule_number": 6,
+		"left":"L",
+		"right":["id"]
+	},
+	{
+		"rule_number": 7,
+		"left":"TIPO",
+		"right":["inteiro"]
+	},
+	{
+		"rule_number": 8,
+		"left":"TIPO",
+		"right":["real"]
+	},
+	{
+		"rule_number": 9,
+		"left":"TIPO",
+		"right":["literal"]
+	},
+	{
+		"rule_number": 10,
+		"left":"A",
+		"right":["ES", "A"]
+	},
+	{
+		"rule_number": 11,
+		"left":"ES",
+		"right":["leia", "id", "pt_v"]
+	},
+	{
+		"rule_number": 12,
+		"left":"ES",
+		"right":["escreva", "ARG", "pt_v"]
+	},
+	{
+		"rule_number": 13,
+		"left":"ARG",
+		"right":["lit"]
+	},
+	{
+		"rule_number": 14,
+		"left":"ARG",
+		"right":["num"]
+	},
+	{
+		"rule_number": 15,
+		"left":"ARG",
+		"right":["id"]
+	},
+	{
+		"rule_number": 16,
+		"left":"A",
+		"right":["CMD", "A"]
+	},
+	{
+		"rule_number": 17,
+		"left":"CMD",
+		"right":["id", "rcb", "LD","pt_v"]
+	},
+	{
+		"rule_number": 18,
+		"left":"LD",
+		"right":["OPRD", "opm", "OPRD"]
+	},
+	{
+		"rule_number": 19,
+		"left":"LD",
+		"right":["OPRD"]
+	},
+	{
+		"rule_number": 20,
+		"left":"OPRD",
+		"right":["id"]
+	},
+	{
+		"rule_number": 21,
+		"left":"OPRD",
+		"right":["num"]
+	},
+	{
+		"rule_number": 22,
+		"left":"A",
+		"right":["COND", "A"]
+	},
+	{
+		"rule_number": 23,
+		"left":"COND",
+		"right":["CAB", "CP"]
+	},
+	{
+		"rule_number": 24,
+		"left":"CAB",
+		"right":["se", "ab_p", "EXP_R", "fc_p", "entao"]
+	},
+	{
+		"rule_number": 25,
+		"left":"EXP_R",
+		"right":["OPRD", "opr", "OPRD"]
+	},
+	{
+		"rule_number": 26,
+		"left":"CP",
+		"right":["ES", "CP"]
+	},
+	{
+		"rule_number": 27,
+		"left":"CP",
+		"right":["CMD", "CP"]
+	},
+	{
+		"rule_number": 28,
+		"left":"CP",
+		"right":["COND", "CP"]
+	},
+	{
+		"rule_number": 29,
+		"left":"CP",
+		"right":["fimse"]
+	},
+	{
+		"rule_number": 30,
+		"left":"A",
+		"right":["R", "A"]
+	},
+	{
+		"rule_number": 31,
+		"left":"R",
+		"right":["CABR", "CPR"]
+	},
+	{
+		"rule_number": 32,
+		"left":"CABR",
+		"right":["repita", "ab_p", "EXP_R", "fc_p"]
+	},
+	{
+		"rule_number": 33,
+		"left":"CPR",
+		"right":["ES", "CPR"]
+	},
+	{
+		"rule_number": 34,
+		"left":"CPR",
+		"right":["CMD", "CPR"]
+	},
+	{
+		"rule_number": 35,
+		"left":"CPR",
+		"right":["COND", "CPR"]
+	},
+	{
+		"rule_number": 36,
+		"left":"CPR",
+		"right":["fimrepita"]
+	},
+	{
+		"rule_number": 37,
+		"left":"A",
+		"right":["fim"]
+	}
+]

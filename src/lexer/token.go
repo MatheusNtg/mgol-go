@@ -1,6 +1,9 @@
 package lexer
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type TokenClass string
 
@@ -68,6 +71,11 @@ var (
 		lexeme:   "",
 		dataType: NULL,
 	}
+	COMMENT_TOKEN = Token{
+		class:    COMMENT,
+		lexeme:   "",
+		dataType: NULL,
+	}
 )
 
 //Language Reserved Tokens
@@ -98,6 +106,10 @@ func NewToken(class TokenClass, lexeme string, dataType DataType) Token {
 
 func (t Token) GetLexem() string {
 	return t.lexeme
+}
+
+func (t Token) GetClass() string {
+	return strings.ToLower(string(t.class))
 }
 
 func (t Token) String() string {

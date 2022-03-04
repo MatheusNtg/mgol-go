@@ -1,13 +1,21 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"mgol-go/src/lexer"
+	"mgol-go/src/parser"
+	"mgol-go/src/stack"
 	"os"
 )
 
 var separator = "=================="
+
+const (
+	stackCapacity   = 100000
+	grammarPath     = "./src/parser/grammar.json"
+	actionTablePath = "./src/parser/tables/action.tsv"
+	gotoTablePath   = "./src/parser/tables/goto.tsv"
+)
 
 func main() {
 	filePath := os.Args[1]
@@ -24,13 +32,9 @@ func main() {
 	defer symbolTable.Cleanup()
 
 	scanner := lexer.NewScanner(file, symbolTable)
-	for {
-		token := scanner.Scan()
-		fmt.Println(token)
-		if token == lexer.EOF_TOKEN {
-			break
-		}
-	}
-	fmt.Printf(separator + "\nTabela de símbolos\n" + separator + "\n")
-	symbolTable.Print()
+	stack := stack.NewStack(stackCapacity)
+	rules := parser.GetRulesMap(grammarPath)
+	parser := parser.NewParser(scanner, stack, rules, actionTablePath, gotoTablePath)
+
+	parser.Parse()
 }
