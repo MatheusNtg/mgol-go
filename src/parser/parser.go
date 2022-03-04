@@ -43,9 +43,9 @@ func isInTokensToIgnore(t lexer.Token) bool {
 }
 
 func (p *Parser) Parse() {
-	token := p.scanner.Scan()
+	token, line, column := p.scanner.Scan()
 	for isInTokensToIgnore(token) {
-		token = p.scanner.Scan()
+		token, line, column = p.scanner.Scan()
 	}
 	p.stack.Push(0)
 
@@ -62,9 +62,9 @@ func (p *Parser) Parse() {
 		switch action {
 		case SHIFT:
 			p.stack.Push(opr)
-			token = p.scanner.Scan()
+			token, line, column = p.scanner.Scan()
 			for isInTokensToIgnore(token) {
-				token = p.scanner.Scan()
+				token, line, column = p.scanner.Scan()
 			}
 		case REDUCE:
 			rule := p.rules.GetRule(opr)
@@ -82,7 +82,7 @@ func (p *Parser) Parse() {
 		case ACCEPT:
 			goto end_for
 		case NONE:
-			recoveryStatus := panicMode(p, token)
+			recoveryStatus := panicMode(p, token, line, column)
 
 			if recoveryStatus == recoveryFail {
 				goto end_for

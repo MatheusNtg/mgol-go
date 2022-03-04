@@ -442,7 +442,7 @@ func (s *Scanner) resetAndRewind() {
 // If it finds a Token it returns the reconized token, otherwhise
 // just returns an error Token and shows to the user the error
 // message related
-func (s *Scanner) Scan() Token {
+func (s *Scanner) Scan() (Token, int, int) {
 	readBuffer := make([]byte, 1)
 
 	for {
@@ -453,27 +453,27 @@ func (s *Scanner) Scan() Token {
 		s.currentColumnFile += n
 
 		if err == io.EOF && len(s.lexemBuffer) == 0 {
-			return EOF_TOKEN
+			return EOF_TOKEN, 0, 0
 		}
 
 		if err == io.EOF && len(s.lexemBuffer) != 0 {
 			if ContainsByte(s.lexemBuffer, '{') && !ContainsByte(s.lexemBuffer, '}') {
 				errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer))
 				s.reset()
-				return ERROR_TOKEN
+				return ERROR_TOKEN, 0, 0
 			}
 
 			numberOfQuotation := strings.Count(string(s.lexemBuffer), "\"")
 			if numberOfQuotation == 1 {
 				errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer))
 				s.reset()
-				return ERROR_TOKEN
+				return ERROR_TOKEN, 0, 0
 			}
 
 			tokenClass := s.getTokenClass(s.dft.GetCurrentState())
 			if tokenClass == COMMENT {
 				s.reset()
-				return COMMENT_TOKEN
+				return COMMENT_TOKEN, 0, 0
 			}
 			lexem := s.lexemBuffer
 			token := NewToken(tokenClass, string(lexem), NULL)
@@ -482,17 +482,18 @@ func (s *Scanner) Scan() Token {
 			s.reset()
 
 			if token.class == IDENTIFIER {
-				return s.symbolTable.Insert(token.lexeme, token)
+				return s.symbolTable.Insert(token.lexeme, token), s.currentLineFile, s.currentColumnFile
 			}
-			return token
+			return token, s.currentLineFile, s.currentColumnFile
 		}
 
 		if !ContainsSymbol(alphabet, currSymbol) || !ContainsByte(s.lexemBuffer, '{') && currChar == '}' {
 			errorhandling.NewLexicalError(s.currentLineFile, s.currentColumnFile, string(s.lexemBuffer)+string(currChar))
 			s.reset()
-			return ERROR_TOKEN
+			return ERROR_TOKEN, 0, 0
 		}
 
+		previousColumnLine := s.currentColumnFile
 		if currChar == '\n' {
 			s.currentLineFile += 1
 			s.currentColumnFile = 0
@@ -504,7 +505,7 @@ func (s *Scanner) Scan() Token {
 			tokenClass := s.getTokenClass(s.dft.GetCurrentState())
 			if tokenClass == COMMENT {
 				s.resetAndRewind()
-				return COMMENT_TOKEN
+				return COMMENT_TOKEN, 0, 0
 			}
 			lexem := s.lexemBuffer
 			token := NewToken(tokenClass, string(lexem), NULL)
@@ -518,9 +519,9 @@ func (s *Scanner) Scan() Token {
 			}
 
 			if token.class == IDENTIFIER {
-				return s.symbolTable.Insert(token.lexeme, token)
+				return s.symbolTable.Insert(token.lexeme, token), s.currentLineFile, previousColumnLine - 1
 			}
-			return token
+			return token, s.currentLineFile, previousColumnLine - 1
 		}
 
 		if errors.Is(err, ErrorTransitionDoesNotExist) && !s.dft.IsFinalState() {
@@ -540,7 +541,7 @@ func (s *Scanner) Scan() Token {
 			}
 			s.dft.Reset()
 
-			return ERROR_TOKEN
+			return ERROR_TOKEN, 0, 0
 		}
 
 		if !ContainsSymbol(s.symbolsToIgnore, currSymbol) {
