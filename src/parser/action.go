@@ -14,7 +14,7 @@ const (
 	SHIFT Action = iota
 	REDUCE
 	ACCEPT
-	NONE
+	ERROR
 )
 
 type ActionReader struct {
@@ -59,7 +59,7 @@ func (a *ActionReader) GetAction(state lexer.State, token lexer.Token) (Action, 
 	value := []byte(a.records[state+1][a.indexes[class]])
 
 	if len(value) == 0 {
-		return NONE, 0
+		return ERROR, 0
 	}
 
 	if strings.Compare(string(value), "acc") == 0 {
@@ -79,6 +79,12 @@ func (a *ActionReader) GetAction(state lexer.State, token lexer.Token) (Action, 
 			panic(err)
 		}
 		return REDUCE, opr
+	case 'e':
+		errorType, err := strconv.Atoi(string(value[1:]))
+		if err != nil {
+			panic(err)
+		}
+		return ERROR, errorType
 	}
 
 	return -1, -1

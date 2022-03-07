@@ -13,6 +13,18 @@ var (
 	}
 )
 
+var errorsMessage = map[int]string{
+	1: "token inesperado",
+	2: "declaração de variáveis mal formada",
+	3: "declaração de variáveis fora do escopo",
+	4: "estrutura condicional mal formada",
+	5: "estrutura de repetição mal formada",
+	6: "tentativa de declaração inválida",
+	7: "expressão inválida",
+	8: "operação de entrada e saída inválida",
+	9: "parênteses desbalanceados",
+}
+
 type Parser struct {
 	scanner         *lexer.Scanner
 	stack           *stack.Stack
@@ -81,8 +93,10 @@ func (p *Parser) Parse() {
 			log.Print(rule.Left, "->", rule.Right)
 		case ACCEPT:
 			goto end_for
-		case NONE:
-			recoveryStatus := panicMode(p, token, line, column)
+		case ERROR:
+			errorMessage := getErrorMessage(opr)
+			log.Printf("Erro: %v na linha %v, coluna %v", errorMessage, line, column)
+			recoveryStatus := panicMode(p, token)
 
 			if recoveryStatus == recoveryFail {
 				goto end_for
@@ -90,4 +104,8 @@ func (p *Parser) Parse() {
 		}
 	}
 end_for:
+}
+
+func getErrorMessage(id int) string {
+	return errorsMessage[id]
 }

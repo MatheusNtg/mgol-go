@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"log"
 	"mgol-go/src/lexer"
 )
 
@@ -12,12 +11,11 @@ const (
 	recoveryFail   RecoveryStatus = false
 )
 
-func panicMode(parser *Parser, firstToken lexer.Token, line, column int) RecoveryStatus {
+func panicMode(parser *Parser, firstToken lexer.Token) RecoveryStatus {
 
 	stack_copy := parser.stack.Clone()
 	actionReader := NewActionReader(parser.actionTablePath)
 	token := firstToken
-	log.Printf("Token \"%v\" inesperado na linha %v coluna %v\n", token.GetLexem(), line, column)
 	parser.stack.Pop()
 
 	for {
@@ -30,15 +28,14 @@ func panicMode(parser *Parser, firstToken lexer.Token, line, column int) Recover
 			state := lexer.State(topStack.(int))
 			action, _ := actionReader.GetAction(state, token)
 
-			if action != NONE {
+			if action != ERROR {
 				return recoverySucess
 			}
 			parser.stack.Pop()
 		}
 
 		parser.stack = stack_copy
-		token, line, column = parser.scanner.Scan()
-		log.Printf("Token \"%v\" inesperado na linha %v coluna %v\n", token.GetLexem(), line, column)
+		token, _, _ = parser.scanner.Scan()
 		if token == lexer.EOF_TOKEN {
 			return recoveryFail
 		}

@@ -44,7 +44,7 @@ func TestGetAction(t *testing.T) {
 			name:            "Get none",
 			state:           3,
 			tokenClass:      "varinicio",
-			expectedAction:  NONE,
+			expectedAction:  ERROR,
 			expectedOperand: 0,
 		},
 	}
