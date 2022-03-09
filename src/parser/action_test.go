@@ -41,11 +41,11 @@ func TestGetAction(t *testing.T) {
 			expectedOperand: 8,
 		},
 		{
-			name:            "Get none",
+			name:            "Get error",
 			state:           3,
 			tokenClass:      "varinicio",
 			expectedAction:  ERROR,
-			expectedOperand: 0,
+			expectedOperand: 2,
 		},
 	}
 
