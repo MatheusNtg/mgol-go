@@ -29,6 +29,7 @@ type Parser struct {
 	scanner         *lexer.Scanner
 	stack           *stack.Stack
 	rules           *RulesMap
+	semantic        *Semantic
 	actionTablePath string
 	gotoTablePath   string
 }
@@ -40,6 +41,7 @@ func NewParser(scanner *lexer.Scanner, stack *stack.Stack, rules *RulesMap, acti
 		rules:           rules,
 		actionTablePath: actionTablePath,
 		gotoTablePath:   gotoTablePath,
+		semantic:        NewSemantic(scanner.GetSymbolTable()),
 	}
 }
 
@@ -90,7 +92,7 @@ func (p *Parser) Parse() {
 			}
 			gotoOpr := gotoReader.GetGoto(state, rule.Left)
 			p.stack.Push(gotoOpr)
-			log.Print(rule.Left, "->", rule.Right)
+			p.semantic.ExecuteRule(rule, token)
 		case ACCEPT:
 			goto end_for
 		case ERROR:
@@ -104,6 +106,8 @@ func (p *Parser) Parse() {
 		}
 	}
 end_for:
+	p.semantic.GenerateCode()
+	p.semantic.symbolTable.Print()
 }
 
 func getErrorMessage(id int) string {

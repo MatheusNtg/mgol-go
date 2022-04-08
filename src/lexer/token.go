@@ -112,6 +112,10 @@ func (t Token) GetClass() string {
 	return strings.ToLower(string(t.class))
 }
 
+func (t Token) GetType() DataType {
+	return t.dataType
+}
+
 func (t Token) String() string {
 	return fmt.Sprintf("Classe: %v, Lexema: %v, Tipo: %v", t.class, t.lexeme, t.dataType)
 }

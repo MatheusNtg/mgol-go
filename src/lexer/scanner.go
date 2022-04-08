@@ -423,6 +423,10 @@ func (s *Scanner) clearLexemBuffer() {
 	s.lexemBuffer = []byte{}
 }
 
+func (s *Scanner) GetSymbolTable() *SymbolTable {
+	return s.symbolTable
+}
+
 // reset clears the lexem buffer
 // and resets the head of the dft
 func (s *Scanner) reset() {
