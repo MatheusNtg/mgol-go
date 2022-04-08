@@ -76,6 +76,7 @@ func (p *Parser) Parse() {
 		switch action {
 		case SHIFT:
 			p.stack.Push(opr)
+			p.semantic.semanticStack.Push(token)
 			token, line, column = p.scanner.Scan()
 			for isInTokensToIgnore(token) {
 				token, line, column = p.scanner.Scan()

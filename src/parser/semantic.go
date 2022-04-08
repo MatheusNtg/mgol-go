@@ -20,46 +20,50 @@ func NewCodeBuffer() *CodeBuffer {
 
 var rulesMap = map[int]func(s *Semantic, rule Rule, token lexer.Token){
 	5: func(s *Semantic, rule Rule, token lexer.Token) {
-		topStackToken, err := s.semanticStack.Pop()
-		if err != nil {
-			panic(err)
-		}
-		convertedToken := topStackToken.(lexer.Token)
-		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), "", convertedToken.GetType())
-		s.semanticStack.Push(newToken)
 		s.AddToCodeBuffer(";\n")
-		s.semanticStack.Push(newToken)
 	},
 
 	6: func(s *Semantic, rule Rule, token lexer.Token) {
-		topStackToken, err := s.semanticStack.Pop()
-		if err != nil {
-			panic(err)
-		}
-		convertedToken := topStackToken.(lexer.Token)
-		newToken := lexer.NewToken(lexer.TokenClass(rule.Right[0]), convertedToken.GetLexem(), convertedToken.GetType())
-		s.symbolTable.Update(newToken.GetLexem(), newToken)
-		s.AddToCodeBuffer(newToken.GetLexem())
-		s.semanticStack.Push(newToken)
+		identifierToken, _ := s.semanticStack.Pop()
+		identifierTokenConverted := identifierToken.(lexer.Token)
+
+		typeToken, _ := s.semanticStack.Pop()
+		typeTokenConverted := typeToken.(lexer.Token)
+
+		identifierTokenConverted.SetType(typeTokenConverted.GetType())
+		s.symbolTable.Update(identifierTokenConverted.GetLexem(), identifierTokenConverted)
+
+		s.AddToCodeBuffer(identifierTokenConverted.GetLexem())
 	},
 
 	7: func(s *Semantic, rule Rule, token lexer.Token) {
-		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), token.GetLexem(), lexer.INTEGER)
+		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), "", lexer.INTEGER)
 		s.semanticStack.Push(newToken)
 		s.AddToCodeBuffer("int ")
+		s.semanticStack.Push(newToken)
 	},
 
 	8: func(s *Semantic, rule Rule, token lexer.Token) {
-		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), token.GetLexem(), lexer.REAL)
+		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), "", lexer.REAL)
 		s.semanticStack.Push(newToken)
 		s.AddToCodeBuffer("float ")
+		s.semanticStack.Push(newToken)
 	},
 
 	9: func(s *Semantic, rule Rule, token lexer.Token) {
-		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), token.GetLexem(), lexer.LITERAL)
+		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), "", lexer.LITERAL)
 		s.semanticStack.Push(newToken)
 		s.AddToCodeBuffer("literal ")
+		s.semanticStack.Push(newToken)
 	},
+
+	11: func(s *Semantic, rule Rule, token lexer.Token) {
+		fmt.Print(rule, token)
+	},
+
+	// 12: func(s *Semantic, rule Rule, token lexer.Token) {
+
+	// },
 }
 
 type Semantic struct {

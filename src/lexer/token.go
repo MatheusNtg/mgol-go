@@ -116,6 +116,14 @@ func (t Token) GetType() DataType {
 	return t.dataType
 }
 
+func (t *Token) SetType(dataType DataType) {
+	t.dataType = dataType
+}
+
+func (t *Token) SetClass(class TokenClass) {
+	t.class = class
+}
+
 func (t Token) String() string {
 	return fmt.Sprintf("Classe: %v, Lexema: %v, Tipo: %v", t.class, t.lexeme, t.dataType)
 }
