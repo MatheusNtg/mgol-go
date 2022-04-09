@@ -93,7 +93,7 @@ func (p *Parser) Parse() {
 			}
 			gotoOpr := gotoReader.GetGoto(state, rule.Left)
 			p.stack.Push(gotoOpr)
-			p.semantic.ExecuteRule(rule, token)
+			p.semantic.ExecuteRule(rule)
 		case ACCEPT:
 			goto end_for
 		case ERROR:
