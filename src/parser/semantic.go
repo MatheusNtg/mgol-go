@@ -17,6 +17,8 @@ const (
 
 const maxCapacityStack = 10000
 
+var semanticErrorFlag = false
+
 type CodeBuffer struct {
 	temporals []TemporalType
 	code      string
@@ -44,12 +46,14 @@ func (c *CodeBuffer) PrintTemporals() string {
 	return temporalCode
 }
 
-var rulesMap = map[int]func(s *Semantic, rule Rule){
-	6: func(s *Semantic, rule Rule) {
+var rulesMap = map[int]func(s *Semantic, rule Rule, line int, column int){
+	// D -> TIPO L pt_v
+	6: func(s *Semantic, rule Rule, line int, column int) {
 		s.AddToCodeBuffer(";\n")
 	},
 
-	7: func(s *Semantic, rule Rule) {
+	// L -> id
+	7: func(s *Semantic, rule Rule, line int, column int) {
 		identifierToken, _ := s.semanticStack.Pop()
 		identifierTokenConverted := identifierToken.(lexer.Token)
 
@@ -62,45 +66,49 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 		s.AddToCodeBuffer(identifierTokenConverted.GetLexem())
 	},
 
-	8: func(s *Semantic, rule Rule) {
+	// TIPO -> inteiro
+	8: func(s *Semantic, rule Rule, line int, column int) {
 		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), "", lexer.INTEGER)
 		s.semanticStack.Push(newToken)
 		s.AddToCodeBuffer("int ")
 	},
 
-	9: func(s *Semantic, rule Rule) {
+	// TIPO -> real
+	9: func(s *Semantic, rule Rule, line int, column int) {
 		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), "", lexer.REAL)
 		s.semanticStack.Push(newToken)
 		s.AddToCodeBuffer("float ")
 	},
 
-	10: func(s *Semantic, rule Rule) {
+	// TIPO -> literal
+	10: func(s *Semantic, rule Rule, line int, column int) {
 		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), "", lexer.LITERAL)
 		s.semanticStack.Push(newToken)
 		s.AddToCodeBuffer("literal ")
 	},
 
 	// ES -> leia id pt_v
-	12: func(s *Semantic, rule Rule) {
+	12: func(s *Semantic, rule Rule, line int, column int) {
 		s.semanticStack.Pop() // Remove our pt_v
 		idToken, _ := s.semanticStack.Pop()
 		idTokenConverted := idToken.(lexer.Token)
 		if idTokenConverted.GetType() == lexer.NULL {
-			//TODO Improve our error handlings
-			fmt.Println("Erro de variável não declarada")
+			fmt.Printf("Erro: variável %s não declarada na linha %d, coluna %d\n", idTokenConverted.GetLexem(), line, column)
+			semanticErrorFlag = true
 			return
 		}
 		switch idTokenConverted.GetType() {
 		case lexer.INTEGER:
-			s.AddToCodeBuffer(fmt.Sprintf("scanf(\"%%d\", %s);\n", idTokenConverted.GetLexem()))
+			s.AddToCodeBuffer(fmt.Sprintf("scanf(\"%%d\", &%s);\n", idTokenConverted.GetLexem()))
 		case lexer.LITERAL:
-			s.AddToCodeBuffer(fmt.Sprintf("scanf(\"%%s\", &%s);\n", idTokenConverted.GetLexem()))
+			s.AddToCodeBuffer(fmt.Sprintf("scanf(\"%%s\", %s);\n", idTokenConverted.GetLexem()))
 		case lexer.REAL:
 			s.AddToCodeBuffer(fmt.Sprintf("scanf(\"%%lf\", &%s);\n", idTokenConverted.GetLexem()))
 		}
 	},
 
-	13: func(s *Semantic, rule Rule) {
+	// ES -> escreva ARG pt_v
+	13: func(s *Semantic, rule Rule, line int, column int) {
 		s.semanticStack.Pop() // Remove our pt_v
 		argToken, _ := s.semanticStack.Pop()
 		argTokenConverted := argToken.(lexer.Token)
@@ -108,27 +116,44 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 		case lexer.INTEGER:
 			s.AddToCodeBuffer(fmt.Sprintf("printf(\"%%d\", %s);\n", argTokenConverted.GetLexem()))
 		case lexer.LITERAL:
-			s.AddToCodeBuffer(fmt.Sprintf("printf(\"%%s\", &%s);\n", argTokenConverted.GetLexem()))
+			s.AddToCodeBuffer(fmt.Sprintf("printf(\"%%s\", %s);\n", argTokenConverted.GetLexem()))
 		case lexer.REAL:
-			s.AddToCodeBuffer(fmt.Sprintf("printf(\"%%lf\", &%s);\n", argTokenConverted.GetLexem()))
+			s.AddToCodeBuffer(fmt.Sprintf("printf(\"%%lf\", %s);\n", argTokenConverted.GetLexem()))
 		}
 	},
 
-	14: func(s *Semantic, rule Rule) {
-		literalToken, _ := s.symbolTable.GetToken("literal")
-		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), literalToken.GetLexem(), literalToken.GetType())
+	// ARG -> lit
+	14: func(s *Semantic, rule Rule, line int, column int) {
+		literalToken, _ := s.semanticStack.Pop()
+		literalTokenConverted := literalToken.(lexer.Token)
+		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), literalTokenConverted.GetLexem(), literalTokenConverted.GetType())
 		s.semanticStack.Push(newToken)
 	},
 
-	15: func(s *Semantic, rule Rule) {
+	// ARG -> num
+	15: func(s *Semantic, rule Rule, line int, column int) {
 		numToken, _ := s.semanticStack.Pop()
 		numTokenConverted := numToken.(lexer.Token)
 		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), numTokenConverted.GetLexem(), numTokenConverted.GetType())
 		s.semanticStack.Push(newToken)
 	},
 
+	// ARG -> id
+	16: func(s *Semantic, rule Rule, line int, column int) {
+		idToken, _ := s.semanticStack.Pop()
+		idTokenConverted := idToken.(lexer.Token)
+		if idTokenConverted.GetType() == lexer.NULL {
+			fmt.Printf("Erro: variável %s não declarada na linha %d, coluna %d\n", idTokenConverted.GetLexem(), line, column)
+			semanticErrorFlag = true
+			return
+		}
+
+		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), idTokenConverted.GetLexem(), idTokenConverted.GetType())
+		s.semanticStack.Push(newToken)
+	},
+
 	// CMD -> id rcb LD pt_v
-	18: func(s *Semantic, rule Rule) {
+	18: func(s *Semantic, rule Rule, line int, column int) {
 		s.semanticStack.Pop() // remove our pt_v
 		rawLD, _ := s.semanticStack.Pop()
 		LD := rawLD.(lexer.Token)
@@ -139,12 +164,14 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 		id := rawId.(lexer.Token)
 
 		if id.GetType() == lexer.NULL {
-			fmt.Printf("Erro: variável %s não declarada\n", id.GetLexem())
+			fmt.Printf("Erro: variável %s não declarada na linha %d, coluna %d\n", id.GetLexem(), line, column)
+			semanticErrorFlag = true
 			return
 		}
 
 		if id.GetType() != LD.GetType() {
-			fmt.Println("Erro: Tipos diferentes para a atribuição")
+			fmt.Printf("Erro: Tipos diferentes para a atribuição na linha %d, coluna %d. '%s' é do tipo '%s', enquanto que '%s' é do tipo '%s'\n", line, column, id.GetLexem(), id.GetType(), LD.GetLexem(), LD.GetType())
+			semanticErrorFlag = true
 			return
 		}
 
@@ -152,7 +179,7 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 	},
 
 	// LD -> OPRD opm OPRD
-	19: func(s *Semantic, rule Rule) {
+	19: func(s *Semantic, rule Rule, line int, column int) {
 		rawOprd2, _ := s.semanticStack.Pop()
 		oprd2 := rawOprd2.(lexer.Token)
 
@@ -163,7 +190,8 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 		oprd1 := rawOprd1.(lexer.Token)
 
 		if oprd1.GetType() != oprd2.GetType() && oprd1.GetType() != lexer.LITERAL && oprd2.GetType() != lexer.LITERAL {
-			fmt.Println("Erro: Operandos com tipos incompativeis")
+			fmt.Printf("Erro: Operandos com tipos incompatíveis na linha %d, coluna %d. '%s' é do tipo '%s', enquanto que '%s' é do tipo '%s'\n", line, column, oprd1.GetLexem(), oprd1.GetType(), oprd2.GetLexem(), oprd2.GetType())
+			semanticErrorFlag = true
 			return
 		}
 
@@ -184,19 +212,29 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 		s.semanticStack.Push(newToken)
 	},
 
-	21: func(s *Semantic, rule Rule) {
+	// LD -> OPRD
+	20: func(s *Semantic, rule Rule, line int, column int) {
+		oprdToken, _ := s.semanticStack.Pop()
+		oprdTokenConverted := oprdToken.(lexer.Token)
+		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), oprdTokenConverted.GetLexem(), oprdTokenConverted.GetType())
+		s.semanticStack.Push(newToken)
+	},
+
+	// OPRD -> id
+	21: func(s *Semantic, rule Rule, line int, column int) {
 		idToken, _ := s.semanticStack.Pop()
 		idTokenConverted := idToken.(lexer.Token)
 		if idTokenConverted.GetType() == lexer.NULL {
-			//TODO Improve our error handlings
-			fmt.Println("Erro de variável não declarada")
+			fmt.Printf("Erro: variável %s não declarada na linha %d, coluna %d\n", idTokenConverted.GetLexem(), line, column)
+			semanticErrorFlag = true
 			return
 		}
 		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), idTokenConverted.GetLexem(), idTokenConverted.GetType())
 		s.semanticStack.Push(newToken)
 	},
 
-	22: func(s *Semantic, rule Rule) {
+	// OPRD -> num
+	22: func(s *Semantic, rule Rule, line int, column int) {
 		numToken, _ := s.semanticStack.Pop()
 		numTokenConverted := numToken.(lexer.Token)
 
@@ -205,12 +243,12 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 	},
 
 	// COND -> CAB CP
-	24: func(s *Semantic, rule Rule) {
+	24: func(s *Semantic, rule Rule, line int, column int) {
 		s.AddToCodeBuffer("}\n")
 	},
 
 	// CAB -> se ab_p EXP_R fc_p entao
-	25: func(s *Semantic, rule Rule) {
+	25: func(s *Semantic, rule Rule, line int, column int) {
 		s.semanticStack.Pop() // remove "entao" from stack
 		s.semanticStack.Pop() // remove "fc_p" from stack
 		rawExp_r, _ := s.semanticStack.Pop()
@@ -219,7 +257,7 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 	},
 
 	// EXP_R -> OPRD opr OPRD
-	26: func(s *Semantic, rule Rule) {
+	26: func(s *Semantic, rule Rule, line int, column int) {
 		rawOprd2, _ := s.semanticStack.Pop()
 		oprd2 := rawOprd2.(lexer.Token)
 
@@ -230,7 +268,8 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 		oprd1 := rawOprd1.(lexer.Token)
 
 		if oprd1.GetType() != oprd2.GetType() {
-			fmt.Print("Erro: Operandos com tipos incompativeis")
+			fmt.Printf("Erro: Operandos com tipos incompatíveis na linha %d, coluna %d. '%s' é do tipo '%s', enquanto que '%s' é do tipo '%s'\n", line, column, oprd1.GetLexem(), oprd1.GetType(), oprd2.GetLexem(), oprd2.GetType())
+			semanticErrorFlag = true
 			return
 		}
 
@@ -240,12 +279,25 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 		s.semanticStack.Push(exp_rToken)
 		s.AddToCodeBuffer(fmt.Sprintf("%s = %s %s %s;\n", temporalId, oprd1.GetLexem(), opr.GetLexem(), oprd2.GetLexem()))
 	},
+
+	// R -> CABR CPR
+	32: func(s *Semantic, rule Rule, line int, column int) {
+		s.AddToCodeBuffer("}\n")
+	},
+
+	// CABR -> repita ab_p EXP_R fc_p
+	33: func(s *Semantic, rule Rule, line int, column int) {
+		s.semanticStack.Pop() // remove "fc_p" from stack
+		rawExp_r, _ := s.semanticStack.Pop()
+		exp_r := rawExp_r.(lexer.Token)
+		s.AddToCodeBuffer(fmt.Sprintf("while (%s) {\n", exp_r.GetLexem()))
+	},
 }
 
 type Semantic struct {
 	semanticStack *stack.Stack
 	codeBuffer    *CodeBuffer
-	ruleMap       map[int]func(s *Semantic, rule Rule)
+	ruleMap       map[int]func(s *Semantic, rule Rule, line int, column int)
 	symbolTable   *lexer.SymbolTable
 }
 
@@ -258,12 +310,12 @@ func NewSemantic(symbolTable *lexer.SymbolTable) *Semantic {
 	}
 }
 
-func (s *Semantic) ExecuteRule(rule Rule) {
+func (s *Semantic) ExecuteRule(rule Rule, line int, column int) {
 	_, found := s.ruleMap[rule.Number+1]
 	if !found {
 		return
 	}
-	s.ruleMap[rule.Number+1](s, rule)
+	s.ruleMap[rule.Number+1](s, rule, line, column)
 }
 
 func (s *Semantic) AddToCodeBuffer(code string) {

@@ -25,6 +25,8 @@ var errorsMessage = map[int]string{
 	9: "parênteses desbalanceados",
 }
 
+var parserErrorFlag = false
+
 type Parser struct {
 	scanner         *lexer.Scanner
 	stack           *stack.Stack
@@ -93,12 +95,13 @@ func (p *Parser) Parse() {
 			}
 			gotoOpr := gotoReader.GetGoto(state, rule.Left)
 			p.stack.Push(gotoOpr)
-			p.semantic.ExecuteRule(rule)
+			p.semantic.ExecuteRule(rule, line, column)
 		case ACCEPT:
 			goto end_for
 		case ERROR:
 			errorMessage := getErrorMessage(opr)
 			log.Printf("Erro: %v na linha %v, coluna %v", errorMessage, line, column)
+			parserErrorFlag = true
 			recoveryStatus := panicMode(p, token)
 
 			if recoveryStatus == recoveryFail {
@@ -107,7 +110,9 @@ func (p *Parser) Parse() {
 		}
 	}
 end_for:
-	p.semantic.GenerateCode()
+	if semanticErrorFlag == false && parserErrorFlag == false {
+		p.semantic.GenerateCode()
+	}
 	p.semantic.symbolTable.Print()
 }
 
