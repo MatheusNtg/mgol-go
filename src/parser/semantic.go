@@ -12,6 +12,7 @@ type TemporalType int
 const (
 	TemporalBool TemporalType = iota
 	TemporalInt
+	TemporalFloat
 )
 
 const maxCapacityStack = 10000
@@ -23,6 +24,24 @@ type CodeBuffer struct {
 
 func NewCodeBuffer() *CodeBuffer {
 	return &CodeBuffer{}
+}
+
+func (c *CodeBuffer) PrintTemporals() string {
+	temporalCode := "/*----Variaveis temporarias----*/\n"
+	for idx, temporal := range c.temporals {
+		chunk := ""
+		switch temporal {
+		case TemporalBool:
+			chunk = fmt.Sprintf("bool T%d;\n", idx)
+		case TemporalInt:
+			chunk = fmt.Sprintf("int T%d;\n", idx)
+		case TemporalFloat:
+			chunk = fmt.Sprintf("float T%d;\n", idx)
+		}
+		temporalCode += chunk
+	}
+	temporalCode += "/*------------------------------*/\n"
+	return temporalCode
 }
 
 var rulesMap = map[int]func(s *Semantic, rule Rule){
@@ -68,7 +87,7 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 		idTokenConverted := idToken.(lexer.Token)
 		if idTokenConverted.GetType() == lexer.NULL {
 			//TODO Improve our error handlings
-			fmt.Printf("Erro de variável não declarada")
+			fmt.Println("Erro de variável não declarada")
 			return
 		}
 		switch idTokenConverted.GetType() {
@@ -108,12 +127,69 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 		s.semanticStack.Push(newToken)
 	},
 
+	// CMD -> id rcb LD pt_v
+	18: func(s *Semantic, rule Rule) {
+		s.semanticStack.Pop() // remove our pt_v
+		rawLD, _ := s.semanticStack.Pop()
+		LD := rawLD.(lexer.Token)
+
+		s.semanticStack.Pop() // remove our rcb
+
+		rawId, _ := s.semanticStack.Pop()
+		id := rawId.(lexer.Token)
+
+		if id.GetType() == lexer.NULL {
+			fmt.Printf("Erro: variável %s não declarada\n", id.GetLexem())
+			return
+		}
+
+		if id.GetType() != LD.GetType() {
+			fmt.Println("Erro: Tipos diferentes para a atribuição")
+			return
+		}
+
+		s.AddToCodeBuffer(fmt.Sprintf("%s = %s;\n", id.GetLexem(), LD.GetLexem()))
+	},
+
+	// LD -> OPRD opm OPRD
+	19: func(s *Semantic, rule Rule) {
+		rawOprd2, _ := s.semanticStack.Pop()
+		oprd2 := rawOprd2.(lexer.Token)
+
+		rawOpm, _ := s.semanticStack.Pop()
+		opm := rawOpm.(lexer.Token)
+
+		rawOprd1, _ := s.semanticStack.Pop()
+		oprd1 := rawOprd1.(lexer.Token)
+
+		if oprd1.GetType() != oprd2.GetType() && oprd1.GetType() != lexer.LITERAL && oprd2.GetType() != lexer.LITERAL {
+			fmt.Println("Erro: Operandos com tipos incompativeis")
+			return
+		}
+
+		temporal := ""
+		operationType := lexer.NULL
+
+		switch oprd1.GetType() {
+		case lexer.INTEGER:
+			temporal = s.NewTemporal(TemporalInt)
+			operationType = lexer.INTEGER
+		case lexer.REAL:
+			temporal = s.NewTemporal(TemporalFloat)
+			operationType = lexer.REAL
+		}
+
+		s.AddToCodeBuffer(fmt.Sprintf("%s = %s %s %s;\n", temporal, oprd1.GetLexem(), opm.GetLexem(), oprd2.GetLexem()))
+		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), temporal, operationType)
+		s.semanticStack.Push(newToken)
+	},
+
 	21: func(s *Semantic, rule Rule) {
 		idToken, _ := s.semanticStack.Pop()
 		idTokenConverted := idToken.(lexer.Token)
 		if idTokenConverted.GetType() == lexer.NULL {
 			//TODO Improve our error handlings
-			fmt.Printf("Erro de variável não declarada")
+			fmt.Println("Erro de variável não declarada")
 			return
 		}
 		newToken := lexer.NewToken(lexer.TokenClass(rule.Left), idTokenConverted.GetLexem(), idTokenConverted.GetType())
@@ -130,12 +206,16 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 
 	// COND -> CAB CP
 	24: func(s *Semantic, rule Rule) {
-		s.AddToCodeBuffer("}")
+		s.AddToCodeBuffer("}\n")
 	},
 
 	// CAB -> se ab_p EXP_R fc_p entao
 	25: func(s *Semantic, rule Rule) {
-		s.AddToCodeBuffer("if")
+		s.semanticStack.Pop() // remove "entao" from stack
+		s.semanticStack.Pop() // remove "fc_p" from stack
+		rawExp_r, _ := s.semanticStack.Pop()
+		exp_r := rawExp_r.(lexer.Token)
+		s.AddToCodeBuffer(fmt.Sprintf("if (%s) {\n", exp_r.GetLexem()))
 	},
 
 	// EXP_R -> OPRD opr OPRD
@@ -151,13 +231,14 @@ var rulesMap = map[int]func(s *Semantic, rule Rule){
 
 		if oprd1.GetType() != oprd2.GetType() {
 			fmt.Print("Erro: Operandos com tipos incompativeis")
+			return
 		}
 
 		temporalId := s.NewTemporal(TemporalBool)
 
 		exp_rToken := lexer.NewToken(lexer.TokenClass(rule.Left), temporalId, lexer.NULL)
 		s.semanticStack.Push(exp_rToken)
-		s.AddToCodeBuffer(fmt.Sprintf("%s = %s %s %s", temporalId, oprd1.GetLexem(), opr.GetType(), oprd2.GetLexem()))
+		s.AddToCodeBuffer(fmt.Sprintf("%s = %s %s %s;\n", temporalId, oprd1.GetLexem(), opr.GetLexem(), oprd2.GetLexem()))
 	},
 }
 
@@ -191,16 +272,19 @@ func (s *Semantic) AddToCodeBuffer(code string) {
 
 // NewTemporal adds a new temporal variable of TemporalType
 func (s *Semantic) NewTemporal(temporalType TemporalType) string {
+	temporalId := len(s.codeBuffer.temporals)
 	s.codeBuffer.temporals = append(s.codeBuffer.temporals, temporalType)
-	return fmt.Sprintf("T%d", (s.codeBuffer.temporals))
+	return fmt.Sprintf("T%d", temporalId)
 }
 
 func (s *Semantic) GenerateCode() {
 	currentCode := `
 #include<stdio.h>
+#include<stdbool.h>
 typedef char literal[256];
 void main() {
 `
+	currentCode = fmt.Sprintf("%s%s", currentCode, s.codeBuffer.PrintTemporals())
 
 	currentCode = fmt.Sprintf("%s%s", currentCode, s.codeBuffer.code)
 
