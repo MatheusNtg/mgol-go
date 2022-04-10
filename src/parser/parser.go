@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"log"
 	"mgol-go/src/lexer"
 	"mgol-go/src/stack"
@@ -24,6 +25,8 @@ var errorsMessage = map[int]string{
 	8: "operação de entrada e saída inválida",
 	9: "parênteses desbalanceados",
 }
+
+var parserErrorFlag = false
 
 type Parser struct {
 	scanner         *lexer.Scanner
@@ -83,6 +86,7 @@ func (p *Parser) Parse() {
 			}
 		case REDUCE:
 			rule := p.rules.GetRule(opr)
+			fmt.Printf("%s -> %s\n", rule.Left, rule.Right)
 			for range rule.Right {
 				p.stack.Pop()
 			}
@@ -93,12 +97,13 @@ func (p *Parser) Parse() {
 			}
 			gotoOpr := gotoReader.GetGoto(state, rule.Left)
 			p.stack.Push(gotoOpr)
-			p.semantic.ExecuteRule(rule)
+			p.semantic.ExecuteRule(rule, line, column)
 		case ACCEPT:
 			goto end_for
 		case ERROR:
 			errorMessage := getErrorMessage(opr)
 			log.Printf("Erro: %v na linha %v, coluna %v", errorMessage, line, column)
+			parserErrorFlag = true
 			recoveryStatus := panicMode(p, token)
 
 			if recoveryStatus == recoveryFail {
@@ -107,8 +112,10 @@ func (p *Parser) Parse() {
 		}
 	}
 end_for:
-	p.semantic.GenerateCode()
-	p.semantic.symbolTable.Print()
+	if semanticErrorFlag == false && parserErrorFlag == false {
+		p.semantic.GenerateCode()
+	}
+	// p.semantic.symbolTable.Print()
 }
 
 func getErrorMessage(id int) string {
