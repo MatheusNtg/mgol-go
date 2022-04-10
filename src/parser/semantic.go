@@ -3,6 +3,7 @@ package parser
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"mgol-go/src/lexer"
 	"mgol-go/src/stack"
 )
@@ -18,6 +19,8 @@ const (
 const maxCapacityStack = 10000
 
 var semanticErrorFlag = false
+
+var repitaEndCode = ""
 
 type CodeBuffer struct {
 	temporals []TemporalType
@@ -93,7 +96,7 @@ var rulesMap = map[int]func(s *Semantic, rule Rule, line int, column int){
 		idToken, _ := s.semanticStack.Pop()
 		idTokenConverted := idToken.(lexer.Token)
 		if idTokenConverted.GetType() == lexer.NULL {
-			fmt.Printf("Erro: variável %s não declarada na linha %d, coluna %d\n", idTokenConverted.GetLexem(), line, column)
+			log.Printf("Erro: variável '%s' não declarada na linha %d, coluna %d\n", idTokenConverted.GetLexem(), line-1, column)
 			semanticErrorFlag = true
 			return
 		}
@@ -143,7 +146,7 @@ var rulesMap = map[int]func(s *Semantic, rule Rule, line int, column int){
 		idToken, _ := s.semanticStack.Pop()
 		idTokenConverted := idToken.(lexer.Token)
 		if idTokenConverted.GetType() == lexer.NULL {
-			fmt.Printf("Erro: variável %s não declarada na linha %d, coluna %d\n", idTokenConverted.GetLexem(), line, column)
+			log.Printf("Erro: variável '%s' não declarada na linha %d, coluna %d\n", idTokenConverted.GetLexem(), line-1, column)
 			semanticErrorFlag = true
 			return
 		}
@@ -164,13 +167,13 @@ var rulesMap = map[int]func(s *Semantic, rule Rule, line int, column int){
 		id := rawId.(lexer.Token)
 
 		if id.GetType() == lexer.NULL {
-			fmt.Printf("Erro: variável %s não declarada na linha %d, coluna %d\n", id.GetLexem(), line, column)
+			log.Printf("Erro: variável '%s' não declarada na linha %d, coluna %d\n", id.GetLexem(), line-1, column)
 			semanticErrorFlag = true
 			return
 		}
 
-		if id.GetType() != LD.GetType() {
-			fmt.Printf("Erro: Tipos diferentes para a atribuição na linha %d, coluna %d. '%s' é do tipo '%s', enquanto que '%s' é do tipo '%s'\n", line, column, id.GetLexem(), id.GetType(), LD.GetLexem(), LD.GetType())
+		if id.GetType() != LD.GetType() && LD.GetType() != lexer.NULL {
+			log.Printf("Erro: Tipos diferentes para a atribuição na linha %d, coluna %d. '%s' é do tipo '%s', enquanto que '%s' é do tipo '%s'\n", line-1, column, id.GetLexem(), id.GetType(), LD.GetLexem(), LD.GetType())
 			semanticErrorFlag = true
 			return
 		}
@@ -190,7 +193,7 @@ var rulesMap = map[int]func(s *Semantic, rule Rule, line int, column int){
 		oprd1 := rawOprd1.(lexer.Token)
 
 		if oprd1.GetType() != oprd2.GetType() && oprd1.GetType() != lexer.LITERAL && oprd2.GetType() != lexer.LITERAL {
-			fmt.Printf("Erro: Operandos com tipos incompatíveis na linha %d, coluna %d. '%s' é do tipo '%s', enquanto que '%s' é do tipo '%s'\n", line, column, oprd1.GetLexem(), oprd1.GetType(), oprd2.GetLexem(), oprd2.GetType())
+			log.Printf("Erro: Operandos com tipos incompatíveis na linha %d, coluna %d. '%s' é do tipo '%s', enquanto que '%s' é do tipo '%s'\n", line, column, oprd1.GetLexem(), oprd1.GetType(), oprd2.GetLexem(), oprd2.GetType())
 			semanticErrorFlag = true
 			return
 		}
@@ -225,7 +228,7 @@ var rulesMap = map[int]func(s *Semantic, rule Rule, line int, column int){
 		idToken, _ := s.semanticStack.Pop()
 		idTokenConverted := idToken.(lexer.Token)
 		if idTokenConverted.GetType() == lexer.NULL {
-			fmt.Printf("Erro: variável %s não declarada na linha %d, coluna %d\n", idTokenConverted.GetLexem(), line, column)
+			log.Printf("Erro: variável '%s' não declarada na linha %d, coluna %d\n", idTokenConverted.GetLexem(), line-1, column)
 			semanticErrorFlag = true
 			return
 		}
@@ -267,8 +270,17 @@ var rulesMap = map[int]func(s *Semantic, rule Rule, line int, column int){
 		rawOprd1, _ := s.semanticStack.Pop()
 		oprd1 := rawOprd1.(lexer.Token)
 
+		rawAbp, _ := s.semanticStack.Pop()
+		abp := rawAbp.(lexer.Token)
+
+		rawSeOrRepita, _ := s.semanticStack.Pop()
+		seOrRepita := rawSeOrRepita.(lexer.Token)
+
+		s.semanticStack.Push(seOrRepita)
+		s.semanticStack.Push(abp)
+
 		if oprd1.GetType() != oprd2.GetType() {
-			fmt.Printf("Erro: Operandos com tipos incompatíveis na linha %d, coluna %d. '%s' é do tipo '%s', enquanto que '%s' é do tipo '%s'\n", line, column, oprd1.GetLexem(), oprd1.GetType(), oprd2.GetLexem(), oprd2.GetType())
+			log.Printf("Erro: Operandos com tipos incompatíveis na linha %d, coluna %d. '%s' é do tipo '%s', enquanto que '%s' é do tipo '%s'\n", line, column, oprd1.GetLexem(), oprd1.GetType(), oprd2.GetLexem(), oprd2.GetType())
 			semanticErrorFlag = true
 			return
 		}
@@ -277,12 +289,22 @@ var rulesMap = map[int]func(s *Semantic, rule Rule, line int, column int){
 
 		exp_rToken := lexer.NewToken(lexer.TokenClass(rule.Left), temporalId, lexer.NULL)
 		s.semanticStack.Push(exp_rToken)
-		s.AddToCodeBuffer(fmt.Sprintf("%s = %s %s %s;\n", temporalId, oprd1.GetLexem(), opr.GetLexem(), oprd2.GetLexem()))
+		if opr.GetLexem() == "<>" {
+			s.AddToCodeBuffer(fmt.Sprintf("%s = %s < %s || %s > %s;\n", temporalId, oprd1.GetLexem(), oprd2.GetLexem(), oprd1.GetLexem(), oprd2.GetLexem()))
+		}
+		if opr.GetLexem() != "<>" {
+			s.AddToCodeBuffer(fmt.Sprintf("%s = %s %s %s;\n", temporalId, oprd1.GetLexem(), opr.GetLexem(), oprd2.GetLexem()))
+		}
+
+		if seOrRepita.GetType() == "repita" {
+			repitaEndCode = fmt.Sprintf("%s = %s %s %s;\n", temporalId, oprd1.GetLexem(), opr.GetLexem(), oprd2.GetLexem())
+		}
+
 	},
 
 	// R -> CABR CPR
 	32: func(s *Semantic, rule Rule, line int, column int) {
-		s.AddToCodeBuffer("}\n")
+		s.AddToCodeBuffer(repitaEndCode + "}\n")
 	},
 
 	// CABR -> repita ab_p EXP_R fc_p
@@ -342,5 +364,5 @@ void main() {
 
 	currentCode = fmt.Sprintf("%s%s", currentCode, "\n}")
 
-	ioutil.WriteFile("output.c", []byte(currentCode), 0755)
+	ioutil.WriteFile("programa.c", []byte(currentCode), 0755)
 }

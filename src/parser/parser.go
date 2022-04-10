@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"log"
 	"mgol-go/src/lexer"
 	"mgol-go/src/stack"
@@ -85,6 +86,7 @@ func (p *Parser) Parse() {
 			}
 		case REDUCE:
 			rule := p.rules.GetRule(opr)
+			fmt.Printf("%s -> %s\n", rule.Left, rule.Right)
 			for range rule.Right {
 				p.stack.Pop()
 			}
@@ -113,7 +115,7 @@ end_for:
 	if semanticErrorFlag == false && parserErrorFlag == false {
 		p.semantic.GenerateCode()
 	}
-	p.semantic.symbolTable.Print()
+	// p.semantic.symbolTable.Print()
 }
 
 func getErrorMessage(id int) string {

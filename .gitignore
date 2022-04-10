@@ -1,5 +1,5 @@
 tests/
 .vscode/
-output.c
-output
+programa.c
+programa
 coverage.out
