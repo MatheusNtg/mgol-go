@@ -8,6 +8,16 @@ This is a compiler for mgol implemented in go for the final work of the compiler
 
 **PS. This project must be run only on linux machines**
 
+## How to run
+
+First create a mgol file and name as you want. For example: `file.mgol`
+Then in the project root, run the following command:
+```bash
+go run src/main.go file.mgol
+```
+
+the compiler will generate a file named `programa.c` that you can compile to binary code using your preferred C compiler.
+
 ## Members
 
 - Alef Iury Siqueira Ferreira
