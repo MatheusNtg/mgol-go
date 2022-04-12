@@ -289,15 +289,20 @@ var rulesMap = map[int]func(s *Semantic, rule Rule, line int, column int){
 
 		exp_rToken := lexer.NewToken(lexer.TokenClass(rule.Left), temporalId, lexer.NULL)
 		s.semanticStack.Push(exp_rToken)
+		updateString := ""
 		if opr.GetLexem() == "<>" {
-			s.AddToCodeBuffer(fmt.Sprintf("%s = %s < %s || %s > %s;\n", temporalId, oprd1.GetLexem(), oprd2.GetLexem(), oprd1.GetLexem(), oprd2.GetLexem()))
-		}
-		if opr.GetLexem() != "<>" {
+			updateString = fmt.Sprintf("%s = %s < %s || %s > %s;\n", temporalId, oprd1.GetLexem(), oprd2.GetLexem(), oprd1.GetLexem(), oprd2.GetLexem())
+			s.AddToCodeBuffer(updateString)
+		} else {
 			s.AddToCodeBuffer(fmt.Sprintf("%s = %s %s %s;\n", temporalId, oprd1.GetLexem(), opr.GetLexem(), oprd2.GetLexem()))
 		}
 
 		if seOrRepita.GetType() == "repita" {
-			repitaEndCode = fmt.Sprintf("%s = %s %s %s;\n", temporalId, oprd1.GetLexem(), opr.GetLexem(), oprd2.GetLexem())
+			if opr.GetLexem() == "<>" {
+				repitaEndCode = updateString
+			} else {
+				repitaEndCode = fmt.Sprintf("%s = %s %s %s;\n", temporalId, oprd1.GetLexem(), opr.GetLexem(), oprd2.GetLexem())
+			}
 		}
 
 	},
