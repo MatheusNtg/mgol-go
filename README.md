@@ -12,8 +12,3 @@ This is a compiler for mgol implemented in go for the final work of the compiler
 
 - Alef Iury Siqueira Ferreira
 - Matheus da Silva Rodrigues
-
-## TODO
-
-- [x] Implement error recovery
-- [x] Ignore comment and lexical error tokens 
