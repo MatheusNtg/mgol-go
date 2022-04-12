@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"log"
 	"mgol-go/src/lexer"
 	"mgol-go/src/stack"
@@ -25,10 +26,13 @@ var errorsMessage = map[int]string{
 	9: "parênteses desbalanceados",
 }
 
+var parserErrorFlag = false
+
 type Parser struct {
 	scanner         *lexer.Scanner
 	stack           *stack.Stack
 	rules           *RulesMap
+	semantic        *Semantic
 	actionTablePath string
 	gotoTablePath   string
 }
@@ -40,6 +44,7 @@ func NewParser(scanner *lexer.Scanner, stack *stack.Stack, rules *RulesMap, acti
 		rules:           rules,
 		actionTablePath: actionTablePath,
 		gotoTablePath:   gotoTablePath,
+		semantic:        NewSemantic(scanner.GetSymbolTable()),
 	}
 }
 
@@ -74,12 +79,14 @@ func (p *Parser) Parse() {
 		switch action {
 		case SHIFT:
 			p.stack.Push(opr)
+			p.semantic.semanticStack.Push(token)
 			token, line, column = p.scanner.Scan()
 			for isInTokensToIgnore(token) {
 				token, line, column = p.scanner.Scan()
 			}
 		case REDUCE:
 			rule := p.rules.GetRule(opr)
+			fmt.Printf("%s -> %s\n", rule.Left, rule.Right)
 			for range rule.Right {
 				p.stack.Pop()
 			}
@@ -90,12 +97,13 @@ func (p *Parser) Parse() {
 			}
 			gotoOpr := gotoReader.GetGoto(state, rule.Left)
 			p.stack.Push(gotoOpr)
-			log.Print(rule.Left, "->", rule.Right)
+			p.semantic.ExecuteRule(rule, line, column)
 		case ACCEPT:
 			goto end_for
 		case ERROR:
 			errorMessage := getErrorMessage(opr)
 			log.Printf("Erro: %v na linha %v, coluna %v", errorMessage, line, column)
+			parserErrorFlag = true
 			recoveryStatus := panicMode(p, token)
 
 			if recoveryStatus == recoveryFail {
@@ -104,6 +112,10 @@ func (p *Parser) Parse() {
 		}
 	}
 end_for:
+	if semanticErrorFlag == false && parserErrorFlag == false {
+		p.semantic.GenerateCode()
+	}
+	// p.semantic.symbolTable.Print()
 }
 
 func getErrorMessage(id int) string {
